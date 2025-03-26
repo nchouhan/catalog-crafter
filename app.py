@@ -110,7 +110,7 @@ def upload_product():
         image_urls = []
         for image_path in saved_images:
             filename = image_path.replace('raw/', '')
-            image_url = url_for('serve_raw_file', filename=filename, _external=True)
+            image_url = url_for('serve_raw_file', filename=filename)
             image_urls.append(image_url)
             
         # Add product details to the result
@@ -426,5 +426,139 @@ def update_product(product_id):
         flash(f'Error updating product: {str(e)}', 'error')
         return redirect(url_for('view_product', product_id=product_id))
 
+@app.route('/search')
+def search_page():
+    """Dedicated search page for finding products."""
+    query = request.args.get('q', '')
+    results = []
+    
+    # Only search if query is provided
+    if query and len(query) >= 2:
+        try:
+            # Get all JSON files in the response directory
+            response_files = os.listdir('response')
+            response_files = [f for f in response_files if f.endswith('.json')]
+            
+            for filename in response_files:
+                file_path = os.path.join('response', filename)
+                try:
+                    with open(file_path, 'r') as f:
+                        product_data = json.load(f)
+                        product_id = filename.replace('.json', '')
+                        
+                        # Extract product information
+                        name = product_data.get('product_name', '')
+                        category = product_data.get('category', '')
+                        price = product_data.get('price', '')
+                        tags = product_data.get('tags', [])
+                        description = product_data.get('short_description', '')
+                        
+                        # If no dedicated description field, use first part of AI-generated description
+                        if not description and 'description' in product_data.get('ai_response', {}):
+                            description = product_data['ai_response']['description'][:100] + '...'
+                        
+                        # Get first image if available
+                        image = ''
+                        if 'image_urls' in product_data and product_data['image_urls']:
+                            image = product_data['image_urls'][0]
+                        elif 'image_paths' in product_data and product_data['image_paths']:
+                            image_path = os.path.basename(product_data['image_paths'][0])
+                            image = url_for('serve_raw_file', filename=image_path)
+                        
+                        # Create searchable text from all product fields
+                        searchable_text = f"{name} {category} {price} {' '.join(tags)} {description}".lower()
+                        
+                        # Add to results if query is found in searchable text
+                        if query.lower() in searchable_text:
+                            results.append({
+                                'product_id': product_id,
+                                'product_name': name,
+                                'category': category,
+                                'price': price,
+                                'tags': tags,
+                                'image_urls': [image] if image else [],
+                                'short_description': description
+                            })
+                except Exception as e:
+                    logging.error(f"Error loading {file_path}: {str(e)}")
+                    continue
+            
+            # Sort results by name
+            results.sort(key=lambda x: x['product_name'])
+            
+        except Exception as e:
+            logging.error(f"Error in search: {str(e)}")
+    
+    return render_template('search.html', query=query, results=results)
+
+@app.route('/api/spotlight-search')
+def spotlight_search():
+    """API endpoint for the spotlight search feature."""
+    query = request.args.get('q', '').lower()
+    if not query or len(query) < 2:
+        return jsonify([])
+    
+    # Load all products from response files
+    products = []
+    try:
+        # Get all JSON files in the response directory
+        response_files = os.listdir('response')
+        response_files = [f for f in response_files if f.endswith('.json')]
+        
+        for filename in response_files:
+            file_path = os.path.join('response', filename)
+            try:
+                with open(file_path, 'r') as f:
+                    product_data = json.load(f)
+                    if 'product_id' not in product_data:
+                        # Add product_id if not present (for backward compatibility)
+                        product_id = filename.replace('.json', '')
+                        product_data['product_id'] = product_id
+                    
+                    # Simplified product object for search results
+                    simplified_product = {
+                        'product_id': product_data.get('product_id', ''),
+                        'product_name': product_data.get('product_name', ''),
+                        'category': product_data.get('category', ''),
+                        'price': product_data.get('price', ''),
+                        'short_description': product_data.get('short_description', '')[:100] + '...' if product_data.get('short_description') else '',
+                        'image_urls': [product_data.get('image_urls', [''])[0]] if product_data.get('image_urls') else [],
+                        'tags': product_data.get('tags', [])[:3]  # Limit tags to first 3
+                    }
+                    products.append(simplified_product)
+            except Exception as e:
+                logging.error(f"Error loading {file_path}: {str(e)}")
+                continue
+    except Exception as e:
+        logging.error(f"Error listing response directory: {str(e)}")
+        return jsonify([])
+    
+    # Filter products based on search query
+    search_results = []
+    for product in products:
+        product_json = json.dumps(product).lower()
+        if query in product_json:
+            # Calculate a simple relevance score (more matches = higher score)
+            relevance = product_json.count(query)
+            # Boost score if query matches beginning of name
+            if product['product_name'].lower().startswith(query):
+                relevance += 10
+            # Boost score if query matches category exactly
+            if product['category'].lower() == query:
+                relevance += 5
+            # Boost score if query matches tag exactly
+            for tag in product.get('tags', []):
+                if tag.lower() == query:
+                    relevance += 3
+            
+            product['relevance'] = relevance
+            search_results.append(product)
+    
+    # Sort by relevance
+    search_results.sort(key=lambda x: x['relevance'], reverse=True)
+    
+    # Limit to top 5 results
+    return jsonify(search_results[:5])
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5050, debug=True)

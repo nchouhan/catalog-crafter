@@ -28,6 +28,30 @@
         .apple-button {
             background-color: #0071e3;
             border-radius: 980px;
+        }
+        /* Spotlight Search Styles */
+        /* New simplified spotlight search styles */
+        #spotlightOverlay {
+            transition: opacity 0.2s ease-in-out;
+        }
+        
+        #spotlightOverlay.active {
+            opacity: 1;
+        }
+        
+        #spotlightOverlay:not(.active) {
+            opacity: 0;
+        }
+        
+        #spotlightContainer {
+            transform: scale(0.98);
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        #spotlightOverlay.active #spotlightContainer {
+            transform: scale(1);
+        }
+        .apple-button {
             transition: all 0.3s ease;
         }
         .apple-button:hover {
@@ -66,6 +90,9 @@
                 <!-- Centralized navigation now handled by the buttons on the right -->
             </nav>
             <div class="flex space-x-4">
+                <button data-spotlight-trigger class="text-white bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-full flex items-center transition-all text-sm">
+                    <i class="fas fa-search mr-2"></i> Quick Search (⌘K)
+                </button>
                 <a href="{{ url_for('catalog') }}" class="apple-button text-white px-4 py-2 flex items-center transition-all text-sm">
                     <i class="fas fa-th-large mr-2"></i> Browse Catalog
                 </a>
@@ -187,6 +214,9 @@
     <footer class="mt-12 pt-10 pb-8 border-t border-gray-200 text-center">
         <div class="container mx-auto px-4">
             <div class="flex justify-center space-x-8 mb-8">
+                <button data-spotlight-trigger class="text-gray-500 hover:text-gray-700 text-sm flex items-center border-0 bg-transparent cursor-pointer">
+                    <i class="fas fa-search mr-1.5"></i> Quick Search
+                </button>
                 <a href="{{ url_for('catalog') }}" class="text-gray-500 hover:text-gray-700 text-sm flex items-center">
                     <i class="fas fa-th-large mr-1.5"></i> Browse Catalog
                 </a>
@@ -202,7 +232,29 @@
         </div>
     </footer>
     
+    <!-- Spotlight Search - Completely Rebuilt -->
+    <div id="spotlightOverlay" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 backdrop-blur-sm z-50 items-center justify-center hidden">
+        <div id="spotlightContainer" class="bg-white rounded-xl shadow-2xl w-11/12 max-w-2xl max-h-[80vh] overflow-hidden transition-all duration-200">
+            <div class="relative border-b border-gray-200">
+                <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input type="text" id="spotlightInput" class="w-full px-5 py-4 pl-12 text-lg border-none focus:ring-0 focus:outline-none" placeholder="Search products..." autocomplete="off">
+            </div>
+            <div id="spotlightResults" class="overflow-y-auto max-h-[60vh]"></div>
+            <div id="noSpotlightResults" class="py-8 px-4 text-center text-gray-500 hidden">
+                <p>No products found</p>
+            </div>
+            <div id="spotlightLoading" class="py-8 px-4 text-center text-gray-500 hidden">
+                <div class="inline-block">
+                    <i class="fas fa-circle-notch fa-spin mr-2"></i> Searching...
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Custom JavaScript -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/spotlight.js') }}"></script>
 </body>
 </html>

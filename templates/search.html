@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Products - Product Catalog Generator</title>
+    <!-- TailwindCSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+    <style>
+        body {
+            font-family: 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+        }
+        .apple-header {
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+        }
+        .apple-button {
+            background-color: #0071e3;
+            border-radius: 980px;
+            transition: all 0.3s ease;
+        }
+        .apple-button:hover {
+            background-color: #0077ED;
+        }
+        .product-card {
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        }
+        .filter-tag {
+            transition: all 0.2s ease;
+        }
+        .filter-tag:hover {
+            transform: translateY(-2px);
+        }
+        .filter-tag.active {
+            background-color: #0071e3;
+            color: white;
+        }
+        .search-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .search-input {
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        .search-input:focus {
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <header class="apple-header text-white py-3 sticky top-0 z-50">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <a href="{{ url_for('catalog') }}" class="text-xl font-medium flex items-center">
+                <i class="fas fa-cube mr-2"></i>
+                <span>Product Catalog</span>
+            </a>
+            <nav class="hidden md:flex space-x-8">
+                <!-- Centralized navigation now handled by the buttons on the right -->
+            </nav>
+            <div class="flex space-x-4">
+                <a href="{{ url_for('catalog') }}" class="text-white bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-full flex items-center transition-all text-sm">
+                    <i class="fas fa-th-large mr-2"></i> All Products
+                </a>
+                <a href="{{ url_for('index') }}" class="apple-button text-white px-4 py-2 flex items-center transition-all text-sm">
+                    <i class="fas fa-plus mr-2"></i> New Product
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <div class="search-container">
+            <!-- Search Form -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+                <h1 class="text-2xl font-medium text-gray-800 mb-4">Search Products</h1>
+                <form action="{{ url_for('search_page') }}" method="get" class="flex flex-wrap gap-3">
+                    <div class="flex-1 min-w-0">
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-gray-400"></i>
+                            </div>
+                            <input type="text" 
+                                   id="search-query" 
+                                   name="q" 
+                                   class="search-input block w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:border-blue-400"
+                                   placeholder="Search products by name, category, description or tags..." 
+                                   value="{{ query }}">
+                        </div>
+                    </div>
+                    <button type="submit" 
+                            class="apple-button text-white px-6 py-3.5 rounded-full font-medium hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Search
+                    </button>
+                    {% if query %}
+                    <a href="{{ url_for('search_page') }}" 
+                       class="bg-gray-100 text-gray-700 px-6 py-3.5 rounded-full font-medium hover:bg-gray-200 focus:outline-none transition-colors">
+                        Clear
+                    </a>
+                    {% endif %}
+                </form>
+            </div>
+
+            <!-- Search Results -->
+            {% if query %}
+                <h2 class="text-xl font-medium text-gray-800 mb-6 flex items-center">
+                    {% if results|length > 0 %}
+                        <span class="mr-2">{{ results|length }} result{% if results|length != 1 %}s{% endif %} for</span>
+                        <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">"{{ query }}"</span>
+                    {% else %}
+                        <span class="mr-2">No results found for</span>
+                        <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">"{{ query }}"</span>
+                    {% endif %}
+                </h2>
+
+                {% if results|length > 0 %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {% for product in results %}
+                            <a href="{{ url_for('view_product', product_id=product.product_id) }}" class="product-card bg-white overflow-hidden">
+                                <div class="h-52 overflow-hidden bg-gray-50">
+                                    {% if product.image_urls %}
+                                    <img src="{{ product.image_urls[0] }}" alt="{{ product.product_name }}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                                    {% else %}
+                                    <div class="w-full h-full flex items-center justify-center">
+                                        <i class="fas fa-cube text-gray-200 text-4xl"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="p-4">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <h3 class="font-medium text-gray-900 leading-tight">{{ product.product_name }}</h3>
+                                            <p class="text-xs text-blue-500 mt-0.5">{{ product.category }}</p>
+                                        </div>
+                                        <span class="text-gray-900 font-medium">{{ product.price }}</span>
+                                    </div>
+                                    <p class="text-sm text-gray-500 line-clamp-2 mb-3 font-light">{{ product.short_description }}</p>
+                                    <div class="flex flex-wrap gap-1">
+                                        {% for tag in product.tags[:3] %}
+                                        <span class="px-2 py-0.5 bg-gray-100 text-xs rounded-full text-gray-600">{{ tag }}</span>
+                                        {% endfor %}
+                                        {% if product.tags|length > 3 %}
+                                        <span class="px-2 py-0.5 bg-gray-100 text-xs rounded-full text-gray-600">+{{ product.tags|length - 3 }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-16 text-center">
+                        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-50 mb-6">
+                            <i class="fas fa-search text-gray-300 text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl font-medium text-gray-800 mb-2">No products found</h3>
+                        <p class="text-gray-500 mb-6 max-w-md mx-auto font-light">We couldn't find any products that match your search. Try different keywords or browse our catalog.</p>
+                        <a href="{{ url_for('catalog') }}" class="inline-block apple-button text-white px-6 py-3 rounded-full text-sm font-medium">
+                            <i class="fas fa-th-large mr-2"></i> Browse All Products
+                        </a>
+                    </div>
+                {% endif %}
+            {% else %}
+                <!-- Initial Search State -->
+                <div class="text-center py-12">
+                    <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gray-50 mb-6">
+                        <i class="fas fa-search text-gray-300 text-4xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-medium text-gray-800 mb-3">Find the perfect product</h2>
+                    <p class="text-gray-500 mb-8 max-w-md mx-auto font-light">Enter keywords in the search box above to find products by name, category, description, or tags.</p>
+                    <div class="flex flex-wrap justify-center gap-2 max-w-xl mx-auto">
+                        <a href="{{ url_for('catalog') }}?category=Electronics" class="px-4 py-2 bg-blue-50 text-blue-600 rounded-full text-sm hover:bg-blue-100 transition-all">
+                            Electronics
+                        </a>
+                        <a href="{{ url_for('catalog') }}?category=Fashion" class="px-4 py-2 bg-blue-50 text-blue-600 rounded-full text-sm hover:bg-blue-100 transition-all">
+                            Fashion
+                        </a>
+                        <a href="{{ url_for('catalog') }}?category=Home" class="px-4 py-2 bg-blue-50 text-blue-600 rounded-full text-sm hover:bg-blue-100 transition-all">
+                            Home
+                        </a>
+                        <a href="{{ url_for('catalog') }}?category=Beauty" class="px-4 py-2 bg-blue-50 text-blue-600 rounded-full text-sm hover:bg-blue-100 transition-all">
+                            Beauty
+                        </a>
+                        <a href="{{ url_for('catalog') }}?category=Sports" class="px-4 py-2 bg-blue-50 text-blue-600 rounded-full text-sm hover:bg-blue-100 transition-all">
+                            Sports
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <footer class="mt-12 pt-10 pb-8 border-t border-gray-200 text-center">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-center space-x-8 mb-8">
+                <a href="{{ url_for('index') }}" class="text-gray-500 hover:text-gray-700 text-sm flex items-center">
+                    <i class="fas fa-plus-circle mr-1.5"></i> New Product
+                </a>
+                <a href="{{ url_for('catalog') }}" class="text-gray-500 hover:text-gray-700 text-sm flex items-center">
+                    <i class="fas fa-th-large mr-1.5"></i> Browse Catalog
+                </a>
+                <a href="{{ url_for('search_page') }}" class="text-gray-500 hover:text-gray-700 text-sm flex items-center">
+                    <i class="fas fa-search mr-1.5"></i> Search Products
+                </a>
+            </div>
+            <p class="text-gray-400 text-xs mb-2">&copy; 2025 Product Catalog Generator. All rights reserved.</p>
+            <p class="text-gray-400 text-xs flex items-center justify-center">
+                <span>Powered by</span>
+                <svg class="h-4 w-4 mx-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.5093-2.6067-1.4997z" />
+                </svg>
+                <span>OpenAI</span>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

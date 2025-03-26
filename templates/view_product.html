@@ -29,6 +29,28 @@
         .apple-button:hover {
             background-color: #0077ED;
         }
+        /* New simplified spotlight search styles */
+        #spotlightOverlay {
+            transition: opacity 0.2s ease-in-out;
+        }
+        
+        #spotlightOverlay.active {
+            opacity: 1;
+        }
+        
+        #spotlightOverlay:not(.active) {
+            opacity: 0;
+        }
+        
+        #spotlightContainer {
+            transform: scale(0.98);
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        #spotlightOverlay.active #spotlightContainer {
+            transform: scale(1);
+        }
+        }
         .tag-pill {
             transition: all 0.3s ease;
             border-radius: 980px;
@@ -83,6 +105,9 @@
                 <!-- Centralized navigation now handled by the buttons on the right -->
             </nav>
             <div class="flex space-x-4">
+                <button data-spotlight-trigger class="text-white bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-full flex items-center transition-all text-sm">
+                    <i class="fas fa-search mr-2"></i> Quick Search (⌘K)
+                </button>
                 <a href="{{ url_for('catalog') }}" class="text-white bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-full flex items-center transition-all text-sm">
                     <i class="fas fa-th-large mr-2"></i> All Products
                 </a>
@@ -103,7 +128,7 @@
                         <div id="imageCarousel" class="relative w-full h-full">
                             {% for image_url in product.image_urls %}
                                 <div class="carousel-item absolute inset-0 transition-opacity duration-500 ease-in-out {% if loop.first %}opacity-100{% else %}opacity-0{% endif %}">
-                                    <img src="{{ image_url }}" alt="{{ product.product_name }}" class="w-full h-full object-contain p-4">
+                                    <img src="{{ image_url }}" alt="{{ product.product_name }}" class="w-full h-full object-contain p-4 cursor-pointer image-lightbox-trigger" data-image-url="{{ image_url }}">
                                 </div>
                             {% endfor %}
                             
@@ -338,8 +363,14 @@
     <footer class="mt-12 pt-10 pb-8 border-t border-gray-200 text-center">
         <div class="container mx-auto px-4">
             <div class="flex justify-center space-x-8 mb-8">
+                <button data-spotlight-trigger class="text-gray-500 hover:text-gray-700 text-sm flex items-center border-0 bg-transparent cursor-pointer">
+                    <i class="fas fa-search mr-1.5"></i> Quick Search
+                </button>
                 <a href="{{ url_for('index') }}" class="text-gray-500 hover:text-gray-700 text-sm flex items-center">
                     <i class="fas fa-plus-circle mr-1.5"></i> New Product
+                </a>
+                <a href="{{ url_for('catalog') }}" class="text-gray-500 hover:text-gray-700 text-sm flex items-center">
+                    <i class="fas fa-th-large mr-1.5"></i> All Products
                 </a>
             </div>
             <p class="text-gray-400 text-xs mb-2">&copy; 2025 Product Catalog Generator. All rights reserved.</p>
@@ -820,6 +851,149 @@
                     specsEditForm.addEventListener('submit', function() {
                         hasChanges = true;
                     });
+                }
+            }
+        });
+    </script>
+    
+    <!-- Spotlight Search - Completely Rebuilt -->
+    <div id="spotlightOverlay" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 backdrop-blur-sm z-50 items-center justify-center hidden">
+        <div id="spotlightContainer" class="bg-white rounded-xl shadow-2xl w-11/12 max-w-2xl max-h-[80vh] overflow-hidden transition-all duration-200">
+            <div class="relative border-b border-gray-200">
+                <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input type="text" id="spotlightInput" class="w-full px-5 py-4 pl-12 text-lg border-none focus:ring-0 focus:outline-none" placeholder="Search products..." autocomplete="off">
+            </div>
+            <div id="spotlightResults" class="overflow-y-auto max-h-[60vh]"></div>
+            <div id="noSpotlightResults" class="py-8 px-4 text-center text-gray-500 hidden">
+                <p>No products found</p>
+            </div>
+            <div id="spotlightLoading" class="py-8 px-4 text-center text-gray-500 hidden">
+                <div class="inline-block">
+                    <i class="fas fa-circle-notch fa-spin mr-2"></i> Searching...
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Spotlight Search Script -->
+    <script src="{{ url_for('static', filename='js/spotlight.js') }}"></script>
+    
+    <!-- Image Lightbox Modal -->
+    <div id="imageLightboxModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 items-center justify-center hidden">
+        <div class="relative w-full h-full flex items-center justify-center">
+            <!-- Close button -->
+            <button id="closeLightbox" class="absolute top-4 right-4 text-white hover:text-gray-300 text-2xl z-10">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <!-- Previous button -->
+            <button id="prevLightboxImage" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 text-4xl z-10">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            
+            <!-- Next button -->
+            <button id="nextLightboxImage" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 text-4xl z-10">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            
+            <!-- Image container -->
+            <div id="lightboxImageContainer" class="max-w-[90%] max-h-[90%]">
+                <img id="lightboxImage" src="" alt="Enlarged product image" class="max-w-full max-h-[90vh] object-contain mx-auto">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Image Lightbox Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const lightboxModal = document.getElementById('imageLightboxModal');
+            const lightboxImage = document.getElementById('lightboxImage');
+            const closeLightbox = document.getElementById('closeLightbox');
+            const prevLightboxImage = document.getElementById('prevLightboxImage');
+            const nextLightboxImage = document.getElementById('nextLightboxImage');
+            const imageTriggers = document.querySelectorAll('.image-lightbox-trigger');
+            
+            let currentLightboxIndex = 0;
+            let lightboxImages = [];
+            
+            // Collect all image URLs
+            imageTriggers.forEach(img => {
+                lightboxImages.push(img.getAttribute('data-image-url'));
+            });
+            
+            // Open lightbox when clicking on an image
+            imageTriggers.forEach((img, index) => {
+                img.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    currentLightboxIndex = index;
+                    openLightbox(img.getAttribute('data-image-url'));
+                });
+            });
+            
+            // Close lightbox
+            closeLightbox.addEventListener('click', function() {
+                lightboxModal.style.display = 'none';
+            });
+            
+            // Click outside to close
+            lightboxModal.addEventListener('click', function(e) {
+                if (e.target === lightboxModal) {
+                    lightboxModal.style.display = 'none';
+                }
+            });
+            
+            // Previous image
+            prevLightboxImage.addEventListener('click', function() {
+                currentLightboxIndex--;
+                if (currentLightboxIndex < 0) {
+                    currentLightboxIndex = lightboxImages.length - 1;
+                }
+                lightboxImage.src = lightboxImages[currentLightboxIndex];
+            });
+            
+            // Next image
+            nextLightboxImage.addEventListener('click', function() {
+                currentLightboxIndex++;
+                if (currentLightboxIndex >= lightboxImages.length) {
+                    currentLightboxIndex = 0;
+                }
+                lightboxImage.src = lightboxImages[currentLightboxIndex];
+            });
+            
+            // Keyboard navigation
+            document.addEventListener('keydown', function(e) {
+                if (lightboxModal.style.display !== 'flex') return;
+                
+                if (e.key === 'Escape') {
+                    lightboxModal.style.display = 'none';
+                } else if (e.key === 'ArrowLeft') {
+                    currentLightboxIndex--;
+                    if (currentLightboxIndex < 0) {
+                        currentLightboxIndex = lightboxImages.length - 1;
+                    }
+                    lightboxImage.src = lightboxImages[currentLightboxIndex];
+                } else if (e.key === 'ArrowRight') {
+                    currentLightboxIndex++;
+                    if (currentLightboxIndex >= lightboxImages.length) {
+                        currentLightboxIndex = 0;
+                    }
+                    lightboxImage.src = lightboxImages[currentLightboxIndex];
+                }
+            });
+            
+            function openLightbox(imageUrl) {
+                lightboxImage.src = imageUrl;
+                lightboxModal.style.display = 'flex';
+                
+                // Show/hide navigation buttons based on image count
+                if (lightboxImages.length <= 1) {
+                    prevLightboxImage.style.display = 'none';
+                    nextLightboxImage.style.display = 'none';
+                } else {
+                    prevLightboxImage.style.display = 'block';
+                    nextLightboxImage.style.display = 'block';
                 }
             }
         });
