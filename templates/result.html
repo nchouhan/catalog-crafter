@@ -8,8 +8,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+    
 </head>
 <body class="bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4 py-8 max-w-5xl">
@@ -119,7 +125,23 @@
                             <p class="text-gray-700 whitespace-pre-line">{{ result.detailed_description }}</p>
                         </div>
                     </div>
-                    
+                    <!-- Image URLs (for developers) -->
+                    {% if result.image_urls %}
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-3">Image URLs</h3>
+                        <div class="bg-gray-50 p-4 rounded-lg overflow-x-auto">
+                            <ul class="list-disc pl-5 space-y-1 text-gray-700">
+                                {% for url in result.image_urls %}
+                                    <li>
+                                        <a href="{{ url }}" target="_blank" class="text-blue-600 hover:underline break-all">
+                                            {{ url }}
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
                     <!-- Specifications and SEO Keywords -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>

@@ -6,7 +6,7 @@ import logging
 from datetime import datetime
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, send_from_directory
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -106,6 +106,16 @@ def upload_product():
         # Call OpenAI API for analysis
         result = analyze_product(product_data, base64_images)
         
+        # Add image URLs to the result
+        image_urls = []
+        for image_path in saved_images:
+            filename = image_path.replace('raw/', '')
+            image_url = url_for('serve_raw_file', filename=filename, _external=True)
+            image_urls.append(image_url)
+        
+        # Add image URLs to the result
+        result['image_urls'] = image_urls
+        
         # Save response to JSON file
         response_file = f"response/{timestamp}.json"
         with open(response_file, 'w') as f:
@@ -153,6 +163,16 @@ def download(timestamp):
     except Exception as e:
         logging.error(f"Error downloading result: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/response/<path:filename>')
+def serve_response_file(filename):
+    """Serve files from the response directory."""
+    return send_from_directory('response', filename)
+
+@app.route('/raw/<path:filename>')
+def serve_raw_file(filename):
+    """Serve files from the raw directory."""
+    return send_from_directory('raw', filename)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
