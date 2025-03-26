@@ -1,5 +1,6 @@
 .env
 raw/*
+!raw/.gitkeep
 dist/
 node_modules/
 coverage/
@@ -9,4 +10,5 @@ coverage/
 *.log/*
 *.log-*/
 response/*
+!response/.gitkeep
 .venv/
