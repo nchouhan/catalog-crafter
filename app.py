@@ -112,16 +112,14 @@ def upload_product():
             filename = image_path.replace('raw/', '')
             image_url = url_for('serve_raw_file', filename=filename, _external=True)
             image_urls.append(image_url)
-        
-         # Add product details to the result
+            
+        # Add product details to the result
         result['product_id'] = timestamp  # Use timestamp as a unique identifier
         result['product_name'] = product_data['name']
         result['category'] = product_data['category']
         result['price'] = product_data['price']
-
-        # Add image URLs to the result
         result['image_urls'] = image_urls
-
+        
         # Save response to JSON file
         response_file = f"response/{timestamp}.json"
         with open(response_file, 'w') as f:
@@ -169,16 +167,16 @@ def download(timestamp):
     except Exception as e:
         logging.error(f"Error downloading result: {str(e)}")
         return jsonify({'error': str(e)}), 500
+        
+@app.route('/raw/<path:filename>')
+def serve_raw_file(filename):
+    """Serve files from the raw directory."""
+    return send_from_directory('raw', filename)
 
 @app.route('/response/<path:filename>')
 def serve_response_file(filename):
     """Serve files from the response directory."""
     return send_from_directory('response', filename)
-
-@app.route('/raw/<path:filename>')
-def serve_raw_file(filename):
-    """Serve files from the raw directory."""
-    return send_from_directory('raw', filename)
 
 @app.route('/catalog')
 def catalog():
@@ -357,6 +355,7 @@ def catalog():
                           active_filters=active_filters,
                           any_filters_active=any_filters_active,
                           request=request)
+
 @app.route('/product/<product_id>')
 def view_product(product_id):
     """View a specific product."""
@@ -374,6 +373,11 @@ def view_product(product_id):
         if 'product_id' not in product:
             product['product_id'] = product_id
         
+        # Update image URLs if available
+        if 'image_paths' in product:
+            product['image_urls'] = [url_for('serve_raw_file', filename=os.path.basename(img_path)) 
+                                   for img_path in product.get('image_paths', [])]
+        
         return render_template('view_product.html', product=product)
     except Exception as e:
         logging.error(f"Error loading product {product_id}: {str(e)}")
@@ -381,6 +385,46 @@ def view_product(product_id):
         return redirect(url_for('catalog'))
 
 
+@app.route('/update_product/<product_id>', methods=['POST'])
+def update_product(product_id):
+    """Update a product's information and save changes back to JSON file."""
+    try:
+        # Load product data from JSON file
+        response_file = f"response/{product_id}.json"
+        if not os.path.exists(response_file):
+            flash('Product not found', 'error')
+            return redirect(url_for('catalog'))
+        
+        with open(response_file, 'r') as f:
+            product_data = json.load(f)
+        
+        # Update fields from the form
+        product_data['product_name'] = request.form.get('product_name', product_data.get('product_name', ''))
+        product_data['category'] = request.form.get('category', product_data.get('category', ''))
+        product_data['price'] = request.form.get('price', product_data.get('price', ''))
+        product_data['short_description'] = request.form.get('short_description', product_data.get('short_description', ''))
+        
+        # Handle tags - these come as a list from the form
+        tags = request.form.getlist('tags')
+        if tags:
+            product_data['tags'] = tags
+        
+        # Handle target audience - these come as a list from the form
+        target_audience = request.form.getlist('target_audience')
+        if target_audience:
+            product_data['target_audience'] = target_audience
+        
+        # Save the updated product data back to the file
+        with open(response_file, 'w') as f:
+            json.dump(product_data, f, indent=4)
+        
+        flash('Product information updated successfully.', 'success')
+        return redirect(url_for('view_product', product_id=product_id))
+    
+    except Exception as e:
+        logging.error(f"Error updating product {product_id}: {str(e)}")
+        flash(f'Error updating product: {str(e)}', 'error')
+        return redirect(url_for('view_product', product_id=product_id))
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5050, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)

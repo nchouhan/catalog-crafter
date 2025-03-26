@@ -80,8 +80,7 @@
                 <span>Product Catalog</span>
             </a>
             <nav class="hidden md:flex space-x-8">
-                <a href="{{ url_for('index') }}" class="text-white hover:text-gray-300 px-2 py-1 font-light">Create</a>
-                <a href="{{ url_for('catalog') }}" class="text-white hover:text-gray-300 px-2 py-1 font-light">Browse</a>
+                <!-- Centralized navigation now handled by the buttons on the right -->
             </nav>
             <div class="flex space-x-4">
                 <a href="{{ url_for('catalog') }}" class="text-white bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-full flex items-center transition-all text-sm">
@@ -250,8 +249,12 @@
     <footer class="mt-12 pt-10 pb-8 border-t border-gray-200 text-center">
         <div class="container mx-auto px-4">
             <div class="flex justify-center space-x-8 mb-8">
-                <a href="{{ url_for('index') }}" class="text-gray-500 hover:text-gray-700 text-sm">Create Product</a>
-                <a href="{{ url_for('catalog') }}" class="text-gray-500 hover:text-gray-700 text-sm">Browse Catalog</a>
+                <a href="{{ url_for('index') }}" class="text-gray-500 hover:text-gray-700 text-sm flex items-center">
+                    <i class="fas fa-plus-circle mr-1.5"></i> New Product
+                </a>
+                <a href="{{ url_for('catalog') }}" class="text-gray-500 hover:text-gray-700 text-sm flex items-center">
+                    <i class="fas fa-th-large mr-1.5"></i> Browse Catalog
+                </a>
             </div>
             <p class="text-gray-400 text-xs mb-2">&copy; 2025 Product Catalog Generator. All rights reserved.</p>
             <p class="text-gray-400 text-xs flex items-center justify-center">

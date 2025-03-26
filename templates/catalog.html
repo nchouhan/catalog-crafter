@@ -72,8 +72,7 @@
                 <span>Product Catalog</span>
             </a>
             <nav class="hidden md:flex space-x-8">
-                <a href="{{ url_for('index') }}" class="text-white hover:text-gray-300 px-2 py-1 font-light">Create</a>
-                <a href="{{ url_for('catalog') }}" class="text-white hover:text-gray-300 px-2 py-1 font-light">Browse</a>
+                <!-- Centralized navigation now handled by the mobile button only -->
             </nav>
             <div class="flex space-x-4">
                 <a href="{{ url_for('index') }}" class="apple-button text-white px-4 py-2 flex items-center transition-all text-sm">
@@ -142,11 +141,12 @@
                 
                 <!-- Expandable Filter Sections -->
                 <div id="filterSections" class="pt-4 border-t border-gray-200">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <!-- Category Filter -->
-                        <div>
+                    <!-- Responsive Filter Grid -->
+                    <div class="grid gap-6" id="dynamicFilterGrid">
+                        <!-- Category Filter - Always full width due to scrollable content -->
+                        <div class="filter-section-item" data-count="{{ filters.categories|length }}">
                             <h3 class="font-medium text-gray-800 mb-2">Category</h3>
-                            <div class="max-h-48 overflow-y-auto space-y-1">
+                            <div class="flex flex-wrap gap-2">
                                 {% for category in filters.categories %}
                                 <a href="{{ url_for('catalog') }}?category={{ category }}{% for key, value in request.args.items() %}{% if key != 'category' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
                                    class="category-filter block px-3 py-2 rounded {% if request.args.get('category') == category %}active{% endif %}">
@@ -157,7 +157,7 @@
                         </div>
                         
                         <!-- Color Filter -->
-                        <div>
+                        <div class="filter-section-item" data-count="{{ filters.colors|length }}">
                             <h3 class="font-medium text-gray-800 mb-2">Color</h3>
                             <div class="flex flex-wrap gap-2">
                                 {% for color in filters.colors %}
@@ -170,7 +170,7 @@
                         </div>
                         
                         <!-- Material Filter -->
-                        <div>
+                        <div class="filter-section-item" data-count="{{ filters.materials|length }}">
                             <h3 class="font-medium text-gray-800 mb-2">Material</h3>
                             <div class="flex flex-wrap gap-2">
                                 {% for material in filters.materials %}
@@ -183,7 +183,7 @@
                         </div>
                         
                         <!-- Style Filter -->
-                        <div>
+                        <div class="filter-section-item" data-count="{{ filters.styles|length }}">
                             <h3 class="font-medium text-gray-800 mb-2">Style</h3>
                             <div class="flex flex-wrap gap-2">
                                 {% for style in filters.styles %}
@@ -196,7 +196,7 @@
                         </div>
                         
                         <!-- Target Audience Filter -->
-                        <div>
+                        <!-- <div class="filter-section-item" data-count="{{ filters.audiences|length }}">
                             <h3 class="font-medium text-gray-800 mb-2">Target Audience</h3>
                             <div class="flex flex-wrap gap-2">
                                 {% for audience in filters.audiences %}
@@ -206,7 +206,7 @@
                                 </a>
                                 {% endfor %}
                             </div>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>
@@ -288,8 +288,9 @@
     <footer class="mt-12 pt-10 pb-8 border-t border-gray-200 text-center">
         <div class="container mx-auto px-4">
             <div class="flex justify-center space-x-8 mb-8">
-                <a href="{{ url_for('index') }}" class="text-gray-500 hover:text-gray-700 text-sm">Create Product</a>
-                <a href="{{ url_for('catalog') }}" class="text-gray-500 hover:text-gray-700 text-sm">Browse Catalog</a>
+                <a href="{{ url_for('index') }}" class="text-gray-500 hover:text-gray-700 text-sm flex items-center">
+                    <i class="fas fa-plus-circle mr-1.5"></i> New Product
+                </a>
             </div>
             <p class="text-gray-400 text-xs mb-2">&copy; 2025 Product Catalog Generator. All rights reserved.</p>
             <p class="text-gray-400 text-xs flex items-center justify-center">
@@ -301,6 +302,24 @@
             </p>
         </div>
     </footer>
+    
+    <style>
+        /* Custom scrollbar for category filter */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.03);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.12);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(0,0,0,0.2);
+        }
+    </style>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -319,6 +338,101 @@
                     }
                 });
             }
+            
+            // Optimize filter layout based on content
+            function optimizeFilterLayout() {
+                const filterGrid = document.getElementById('dynamicFilterGrid');
+                const filterItems = document.querySelectorAll('.filter-section-item');
+                
+                // Skip if elements don't exist
+                if (!filterGrid || filterItems.length === 0) return;
+                
+                // Start with a clean grid class
+                filterGrid.className = 'grid gap-6';
+                
+                // Get current window width
+                const windowWidth = window.innerWidth;
+                
+                // Mobile layout: single column
+                if (windowWidth < 640) {
+                    return; // Default is already single column
+                }
+                
+                // Calculate optimal layout
+                // Categories always get full width due to scrolling behavior
+                const categoryFilter = document.querySelector('.filter-section-item[data-count]');
+                if (categoryFilter) {
+                    categoryFilter.classList.add('col-span-full');
+                }
+                
+                // For other filters, determine layout based on count
+                let smallFilters = [];
+                let mediumFilters = [];
+                let largeFilters = [];
+                
+                filterItems.forEach((item, index) => {
+                    if (index === 0) return; // Skip category filter (always first)
+                    
+                    const count = parseInt(item.getAttribute('data-count') || '0');
+                    
+                    if (count <= 3) {
+                        smallFilters.push(item);
+                    } else if (count <= 6) {
+                        mediumFilters.push(item);
+                    } else {
+                        largeFilters.push(item);
+                    }
+                });
+                
+                // Apply grid template based on screen size
+                if (windowWidth >= 1024) { // Large screens: up to 3 columns
+                    filterGrid.classList.add('grid-cols-3');
+                    
+                    // Arrange small filters side by side (2 or 3 per row)
+                    if (smallFilters.length >= 2) {
+                        smallFilters.forEach(item => item.classList.add('col-span-1'));
+                    }
+                    
+                    // Medium filters get 1-2 columns depending on their count
+                    mediumFilters.forEach(item => {
+                        if (mediumFilters.length === 1) {
+                            item.classList.add('md:col-span-2');
+                        } else {
+                            item.classList.add('md:col-span-1', 'lg:col-span-1');
+                        }
+                    });
+                    
+                    // Large filters always get more space
+                    largeFilters.forEach(item => {
+                        item.classList.add('col-span-3', 'md:col-span-3', 'lg:col-span-2');
+                    });
+                    
+                } else if (windowWidth >= 768) { // Medium screens: up to 2 columns
+                    filterGrid.classList.add('grid-cols-2');
+                    
+                    // Small filters can fit side by side
+                    smallFilters.forEach(item => item.classList.add('col-span-1'));
+                    
+                    // Medium filters generally take a full row on medium screens
+                    mediumFilters.forEach(item => {
+                        if (mediumFilters.length === 1) {
+                            item.classList.add('col-span-2');
+                        } else {
+                            item.classList.add('col-span-1');
+                        }
+                    });
+                    
+                    // Large filters need more space
+                    largeFilters.forEach(item => item.classList.add('col-span-2'));
+                } else {
+                    // Default small screens: single column
+                    filterGrid.classList.add('grid-cols-1');
+                }
+            }
+            
+            // Run optimization on load and window resize
+            optimizeFilterLayout();
+            window.addEventListener('resize', optimizeFilterLayout);
             
             // Animation for product cards on scroll
             const animateOnScroll = () => {
