@@ -1,5 +1,5 @@
 .env
-raw/
+raw/*
 dist/
 node_modules/
 coverage/
@@ -8,5 +8,5 @@ coverage/
 *.log-*
 *.log/*
 *.log-*/
-response/
+response/*
 .venv/
