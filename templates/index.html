@@ -16,30 +16,68 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
     <style>
         body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f8f9fa;
+            font-family: 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #ffffff;
+            color: #1d1d1f;
         }
-        .sport-gradient {
-            background: linear-gradient(135deg, #0b132b 0%, #3a506b 100%);
+        .apple-header {
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+        }
+        .apple-button {
+            background-color: #0071e3;
+            border-radius: 980px;
+            transition: all 0.3s ease;
+        }
+        .apple-button:hover {
+            background-color: #0077ED;
+        }
+        .product-form {
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+        }
+        .form-input {
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+        .form-input:focus {
+            border-color: #0071e3;
+            box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15);
+        }
+        .dropzone {
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        .dropzone:hover {
+            background-color: #f5f5f7;
         }
     </style>
 </head>
-<body>
-    <header class="sport-gradient text-white py-4">
+<body class="min-h-screen">
+    <header class="apple-header text-white py-3 sticky top-0 z-50">
         <div class="container mx-auto px-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold">Product Catalog Generator</h1>
+            <a href="{{ url_for('index') }}" class="text-xl font-medium flex items-center">
+                <i class="fas fa-cube mr-2"></i>
+                <span>Product Catalog</span>
+            </a>
+            <nav class="hidden md:flex space-x-8">
+                <a href="{{ url_for('index') }}" class="text-white hover:text-gray-300 px-2 py-1 font-light">Create</a>
+                <a href="{{ url_for('catalog') }}" class="text-white hover:text-gray-300 px-2 py-1 font-light">Browse</a>
+            </nav>
             <div class="flex space-x-4">
-                <a href="{{ url_for('catalog') }}" class="bg-white text-gray-800 hover:bg-gray-200 px-4 py-2 rounded-full flex items-center transition-all">
-                    <i class="fas fa-th-large mr-2"></i> View Catalog
+                <a href="{{ url_for('catalog') }}" class="apple-button text-white px-4 py-2 flex items-center transition-all text-sm md:hidden">
+                    <i class="fas fa-th-large mr-2"></i> Browse
                 </a>
             </div>
         </div>
     </header>
     
     <div class="container mx-auto px-4 py-8 max-w-4xl">
-        <header class="mb-8 text-center">
-            <h2 class="text-2xl font-bold text-gray-800 mb-2">Create New Product</h2>
-            <p class="text-gray-600">Upload product images and details to generate AI-powered descriptions and tags</p>
+        <header class="mb-16 text-center pt-10">
+            <h2 class="text-5xl font-semibold text-gray-900 mb-4 tracking-tight">Create a Product</h2>
+            <p class="text-xl text-gray-500 max-w-xl mx-auto">Upload images and details to generate AI-powered descriptions</p>
         </header>
 
         <!-- Flash Messages -->
@@ -47,7 +85,7 @@
             {% if messages %}
                 <div class="mb-6">
                     {% for category, message in messages %}
-                        <div class="p-4 mb-4 rounded-md {% if category == 'error' %}bg-red-50 text-red-800 border border-red-300{% else %}bg-green-50 text-green-800 border border-green-300{% endif %}">
+                        <div class="p-4 mb-4 rounded-xl {% if category == 'error' %}bg-red-50 text-red-800 border border-red-200{% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}">
                             {{ message }}
                         </div>
                     {% endfor %}
@@ -56,54 +94,58 @@
         {% endwith %}
 
         <main>
-            <form id="productForm" action="{{ url_for('upload_product') }}" method="POST" enctype="multipart/form-data" class="bg-white rounded-lg shadow-md p-6">
-                <div class="mb-6">
-                    <h2 class="text-xl font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">Product Information</h2>
+            <form id="productForm" action="{{ url_for('upload_product') }}" method="POST" enctype="multipart/form-data" class="bg-white border border-gray-100 rounded-2xl shadow-sm p-8 product-form">
+                <div class="mb-10">
+                    <h3 class="text-2xl font-medium text-gray-900 mb-6">Product Details</h3>
                     
-                    <div class="mb-4">
-                        <label for="product_name" class="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                    <div class="mb-6">
+                        <label for="product_name" class="block text-sm font-medium text-gray-500 mb-2">Product Name</label>
                         <input type="text" id="product_name" name="product_name" required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                               class="w-full px-4 py-3 border border-gray-300 form-input focus:outline-none">
                     </div>
                     
-                    <div class="mb-4">
-                        <label for="product_category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <div class="mb-6">
+                        <label for="product_category" class="block text-sm font-medium text-gray-500 mb-2">Category</label>
                         <input type="text" id="product_category" name="product_category" required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                               class="w-full px-4 py-3 border border-gray-300 form-input focus:outline-none">
                     </div>
                     
                     <div class="mb-4">
-                        <label for="product_price" class="block text-sm font-medium text-gray-700 mb-1">Price</label>
-                        <input type="text" id="product_price" name="product_price" required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               placeholder="$0.00">
+                        <label for="product_price" class="block text-sm font-medium text-gray-500 mb-2">Price</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <span class="text-gray-500">$</span>
+                            </div>
+                            <input type="text" id="product_price" name="product_price" required
+                                   class="w-full pl-8 px-4 py-3 border border-gray-300 form-input focus:outline-none"
+                                   placeholder="0.00">
+                        </div>
                     </div>
                 </div>
                 
-                <div class="mb-6">
-                    <h2 class="text-xl font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">Product Images</h2>
+                <div class="mb-10">
+                    <h3 class="text-2xl font-medium text-gray-900 mb-6">Product Images</h3>
                     
-                    <div class="mb-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Upload 1-5 Images</label>
-                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md relative" id="dropzone">
-                            <div class="space-y-1 text-center">
-                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                    <div class="mb-4">
+                        <div class="mt-1 flex justify-center px-8 py-10 border-2 border-gray-200 border-dashed dropzone" id="dropzone">
+                            <div class="space-y-3 text-center">
+                                <svg class="mx-auto h-14 w-14 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
                                     <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
-                                <div class="flex text-sm text-gray-600">
-                                    <label for="product_images" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
-                                        <span>Upload files</span>
+                                <div class="flex flex-col space-y-1 items-center text-gray-600">
+                                    <label for="product_images" class="relative cursor-pointer apple-button text-white px-4 py-2 rounded-full text-sm font-medium focus-within:outline-none inline-block">
+                                        <span>Choose Files</span>
                                         <input id="product_images" name="product_images" type="file" class="sr-only" multiple accept="image/png, image/jpeg, image/jpg, image/webp" required>
                                     </label>
-                                    <p class="pl-1">or drag and drop</p>
+                                    <p class="text-sm">or drag and drop</p>
                                 </div>
-                                <p class="text-xs text-gray-500">PNG, JPG, JPEG, WEBP up to 5MB each</p>
+                                <p class="text-xs text-gray-500">Upload 1-5 images (PNG, JPG, WEBP up to 5MB each)</p>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Image Preview Container -->
-                    <div id="imagePreviewContainer" class="hidden mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                    <div id="imagePreviewContainer" class="hidden mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                         <!-- Image previews will be dynamically added here -->
                     </div>
                     
@@ -111,36 +153,54 @@
                     <p id="imageError" class="hidden mt-2 text-sm text-red-600"></p>
                 </div>
                 
-                <div class="flex justify-between items-center">
-                    <button type="button" id="resetButton" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500">
-                        <i class="fas fa-undo mr-1"></i> Reset
+                <div class="flex justify-between items-center pt-4">
+                    <button type="button" id="resetButton" class="px-6 py-3 text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200 focus:outline-none transition-colors">
+                        <i class="fas fa-arrow-rotate-left mr-1"></i> Reset
                     </button>
                     
-                    <button type="submit" id="generateButton" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <i class="fas fa-magic mr-1"></i> Generate Description
+                    <button type="submit" id="generateButton" class="px-8 py-3 apple-button text-white rounded-full focus:outline-none">
+                        <i class="fas fa-sparkles mr-2"></i> Generate Description
                     </button>
                 </div>
             </form>
             
             <!-- Loading Overlay -->
-            <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-                <div class="bg-white p-6 rounded-lg shadow-xl text-center max-w-md w-full mx-4">
-                    <img src="{{ url_for('static', filename='images/loader.svg') }}" alt="Loading" class="w-16 h-16 mx-auto mb-4">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Generating Product Content</h3>
-                    <p class="text-gray-600 mb-4">Our AI is analyzing your product images and creating descriptions. This may take up to 30 seconds.</p>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                        <div id="progressBar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+            <div id="loadingOverlay" class="fixed inset-0 bg-white bg-opacity-95 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+                <div class="text-center max-w-md w-full mx-4">
+                    <div class="mb-6">
+                        <svg class="animate-spin h-10 w-10 text-gray-400 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
                     </div>
+                    <h3 class="text-2xl font-medium text-gray-900 mb-3">Analyzing Images</h3>
+                    <p class="text-gray-500 mb-6 text-lg">Our AI is creating detailed product descriptions from your images. This takes about 30 seconds.</p>
+                    <div class="w-full bg-gray-100 rounded-full h-1.5 mb-2">
+                        <div id="progressBar" class="bg-gray-900 h-1.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                    <p id="progressText" class="text-sm text-gray-400">Starting analysis...</p>
                 </div>
             </div>
         </main>
         
     </div>
     
-    <footer class="bg-gray-800 text-white py-6 mt-12">
-        <div class="container mx-auto px-4 text-center">
-            <p class="mb-2">&copy; 2024 Product Catalog Generator</p>
-            <p class="text-gray-400 text-sm">Powered by OpenAI API</p>
+    <footer class="border-t border-gray-200 py-8 mt-20">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <p class="text-gray-500 text-sm">&copy; 2024 Product Catalog Generator. All rights reserved.</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-500 text-xs">Powered by</span>
+                    <span class="text-black font-medium flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0015 0m-15 0a7.5 7.5 0 1115 0m-15 0H3m16.5 0H21m-1.5 0H12m-8.457 3.077l1.41-.513m14.095-5.13l1.41-.513M5.106 17.785l1.15-.964m11.49-9.642l1.149-.964M7.501 19.795l.75-1.3m7.5-12.99l.75-1.3m-6.063 16.658l.26-1.477m2.605-14.772l.26-1.477m0 17.726l-.26-1.477M10.698 4.614l-.26-1.477M16.5 19.794l-.75-1.299M7.5 4.205L12 12m6.894 5.785l-1.149-.964M6.256 7.178l-1.15-.964m15.352 8.864l-1.41-.513M4.954 9.435l-1.41-.514M12.002 12l-3.75 6.495" />
+                        </svg>
+                        OpenAI
+                    </span>
+                </div>
+            </div>
         </div>
     </footer>
     

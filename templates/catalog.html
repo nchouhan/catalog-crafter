@@ -8,50 +8,75 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
     <style>
         body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f8f9fa;
+            font-family: 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #ffffff;
+            color: #1d1d1f;
         }
-        .sport-gradient {
-            background: linear-gradient(135deg, #0b132b 0%, #3a506b 100%);
+        .apple-header {
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+        }
+        .apple-button {
+            background-color: #0071e3;
+            border-radius: 980px;
+            transition: all 0.3s ease;
+        }
+        .apple-button:hover {
+            background-color: #0077ED;
         }
         .product-card {
             transition: all 0.3s ease;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
         }
         .product-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
         .filter-tag {
             transition: all 0.2s ease;
+            border-radius: 980px;
+            font-size: 13px;
         }
         .filter-tag:hover, .filter-tag.active {
-            background-color: #3b82f6;
+            background-color: #0071e3;
             color: white;
         }
         .category-filter {
-            border-left: 3px solid transparent;
+            border-left: 2px solid transparent;
             transition: all 0.2s ease;
+            font-size: 14px;
+            border-radius: 8px;
         }
         .category-filter:hover, .category-filter.active {
-            border-left-color: #3b82f6;
-            background-color: rgba(59, 130, 246, 0.1);
+            border-left-color: #0071e3;
+            background-color: rgba(0, 113, 227, 0.08);
+        }
+        .filter-section {
+            border-radius: 18px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
         }
     </style>
 </head>
-<body>
-    <header class="sport-gradient text-white py-4">
+<body class="min-h-screen">
+    <header class="apple-header text-white py-3 sticky top-0 z-50">
         <div class="container mx-auto px-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold">Product Catalog</h1>
+            <a href="{{ url_for('catalog') }}" class="text-xl font-medium flex items-center">
+                <i class="fas fa-cube mr-2"></i>
+                <span>Product Catalog</span>
+            </a>
+            <nav class="hidden md:flex space-x-8">
+                <a href="{{ url_for('index') }}" class="text-white hover:text-gray-300 px-2 py-1 font-light">Create</a>
+                <a href="{{ url_for('catalog') }}" class="text-white hover:text-gray-300 px-2 py-1 font-light">Browse</a>
+            </nav>
             <div class="flex space-x-4">
-                <a href="{{ url_for('index') }}" class="bg-white text-gray-800 hover:bg-gray-200 px-4 py-2 rounded-full flex items-center transition-all">
+                <a href="{{ url_for('index') }}" class="apple-button text-white px-4 py-2 flex items-center transition-all text-sm">
                     <i class="fas fa-plus mr-2"></i> New Product
                 </a>
             </div>
@@ -61,7 +86,7 @@
     <main class="container mx-auto px-4 py-8">
         <!-- Search and Filter Bar -->
         <div class="mb-8">
-            <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 filter-section">
                 <div class="mb-4">
                     <form id="searchForm" method="GET" action="{{ url_for('catalog') }}">
                         <div class="flex flex-wrap gap-4">
@@ -69,14 +94,14 @@
                                 <div class="relative">
                                     <input type="text" name="q" id="searchInput" placeholder="Search products..." 
                                         value="{{ request.args.get('q', '') }}"
-                                        class="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                    <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
+                                        class="w-full p-3 pl-10 rounded-full border border-gray-300 focus:outline-none focus:border-blue-400 transition-colors">
+                                    <i class="fas fa-search absolute left-4 top-3.5 text-gray-400"></i>
                                 </div>
                             </div>
-                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium">
+                            <button type="submit" class="apple-button text-white px-6 py-3 rounded-full text-sm font-medium">
                                 Search
                             </button>
-                            <a href="{{ url_for('catalog') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg font-medium flex items-center">
+                            <a href="{{ url_for('catalog') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-full text-sm font-medium flex items-center transition-colors">
                                 <i class="fas fa-redo-alt mr-2"></i> Reset
                             </a>
                         </div>
@@ -189,10 +214,11 @@
         
         <!-- Results Count and Sort -->
         <div class="flex justify-between items-center mb-6">
-            <p class="text-gray-600"><span class="font-medium">{{ products|length }}</span> products found</p>
+            <p class="text-gray-600 text-sm"><span class="font-medium">{{ products|length }}</span> products found</p>
             <div class="flex items-center space-x-2">
-                <label for="sort" class="text-gray-600">Sort by:</label>
-                <select id="sort" class="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                <label for="sort" class="text-gray-600 text-sm">Sort by:</label>
+                <select id="sort" class="border rounded-full px-3 py-1.5 text-sm focus:outline-none focus:border-blue-400 appearance-none pr-8 pl-3 bg-no-repeat transition-colors"
+                        style="background-image: url('data:image/svg+xml;utf8,<svg fill=%22%23888%22 height=%2224%22 viewBox=%220 0 24 24%22 width=%2224%22 xmlns=%22http://www.w3.org/2000/svg%22><path d=%22M7 10l5 5 5-5z%22/><path d=%22M0 0h24v24H0z%22 fill=%22none%22/></svg>'); background-position: right 0.5rem center; background-size: 1rem;"
                         onchange="window.location.href=this.value">
                     <option value="{{ url_for('catalog') }}?sort=newest{% for key, value in request.args.items() %}{% if key != 'sort' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
                             {% if request.args.get('sort') == 'newest' or not request.args.get('sort') %}selected{% endif %}>
@@ -214,31 +240,31 @@
         {% if products %}
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {% for product in products %}
-            <a href="{{ url_for('view_product', product_id=product.product_id) }}" class="product-card bg-white rounded-xl shadow-md overflow-hidden">
-                <div class="h-52 overflow-hidden bg-gray-100">
+            <a href="{{ url_for('view_product', product_id=product.product_id) }}" class="product-card bg-white overflow-hidden">
+                <div class="h-52 overflow-hidden bg-gray-50">
                     {% if product.image_urls %}
-                    <img src="{{ product.image_urls[0] }}" alt="{{ product.product_name }}" class="w-full h-full object-cover">
+                    <img src="{{ product.image_urls[0] }}" alt="{{ product.product_name }}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
                     {% else %}
                     <div class="w-full h-full flex items-center justify-center">
-                        <i class="fas fa-image text-gray-300 text-4xl"></i>
+                        <i class="fas fa-cube text-gray-200 text-4xl"></i>
                     </div>
                     {% endif %}
                 </div>
                 <div class="p-4">
                     <div class="flex justify-between items-start mb-2">
                         <div>
-                            <h3 class="font-semibold text-gray-900 leading-tight">{{ product.product_name }}</h3>
-                            <p class="text-sm text-blue-600">{{ product.category }}</p>
+                            <h3 class="font-medium text-gray-900 leading-tight">{{ product.product_name }}</h3>
+                            <p class="text-xs text-blue-500 mt-0.5">{{ product.category }}</p>
                         </div>
-                        <span class="text-gray-900 font-bold">{{ product.price }}</span>
+                        <span class="text-gray-900 font-medium">{{ product.price }}</span>
                     </div>
-                    <p class="text-sm text-gray-600 line-clamp-2 mb-3">{{ product.short_description }}</p>
+                    <p class="text-sm text-gray-500 line-clamp-2 mb-3 font-light">{{ product.short_description }}</p>
                     <div class="flex flex-wrap gap-1">
                         {% for tag in product.tags[:3] %}
-                        <span class="px-2 py-1 bg-gray-100 text-xs rounded-full">{{ tag }}</span>
+                        <span class="px-2 py-0.5 bg-gray-100 text-xs rounded-full text-gray-600">{{ tag }}</span>
                         {% endfor %}
                         {% if product.tags|length > 3 %}
-                        <span class="px-2 py-1 bg-gray-100 text-xs rounded-full">+{{ product.tags|length - 3 }}</span>
+                        <span class="px-2 py-0.5 bg-gray-100 text-xs rounded-full text-gray-600">+{{ product.tags|length - 3 }}</span>
                         {% endif %}
                     </div>
                 </div>
@@ -246,21 +272,33 @@
             {% endfor %}
         </div>
         {% else %}
-        <div class="bg-white rounded-xl shadow-lg p-12 text-center">
-            <i class="fas fa-search text-gray-300 text-5xl mb-4"></i>
-            <h2 class="text-2xl font-bold text-gray-800 mb-2">No products found</h2>
-            <p class="text-gray-600 mb-6">Try adjusting your search or filter criteria</p>
-            <a href="{{ url_for('catalog') }}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-16 text-center">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-50 mb-6">
+                <i class="fas fa-search text-gray-300 text-3xl"></i>
+            </div>
+            <h2 class="text-xl font-medium text-gray-800 mb-2">No Products Found</h2>
+            <p class="text-gray-500 mb-6 max-w-md mx-auto font-light">We couldn't find any products that match your filters. Try adjusting your search criteria or browse our catalog.</p>
+            <a href="{{ url_for('catalog') }}" class="inline-block apple-button text-white px-6 py-3 rounded-full text-sm font-medium">
                 Clear All Filters
             </a>
         </div>
         {% endif %}
     </main>
     
-    <footer class="bg-gray-800 text-white py-6 mt-12">
-        <div class="container mx-auto px-4 text-center">
-            <p class="mb-2">&copy; 2024 Product Catalog Generator</p>
-            <p class="text-gray-400 text-sm">Powered by OpenAI API</p>
+    <footer class="mt-12 pt-10 pb-8 border-t border-gray-200 text-center">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-center space-x-8 mb-8">
+                <a href="{{ url_for('index') }}" class="text-gray-500 hover:text-gray-700 text-sm">Create Product</a>
+                <a href="{{ url_for('catalog') }}" class="text-gray-500 hover:text-gray-700 text-sm">Browse Catalog</a>
+            </div>
+            <p class="text-gray-400 text-xs mb-2">&copy; 2025 Product Catalog Generator. All rights reserved.</p>
+            <p class="text-gray-400 text-xs flex items-center justify-center">
+                <span>Powered by</span>
+                <svg class="h-4 w-4 mx-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.5093-2.6067-1.4997z" />
+                </svg>
+                <span>OpenAI</span>
+            </p>
         </div>
     </footer>
     

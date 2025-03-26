@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const resetButton = document.getElementById('resetButton');
     const loadingOverlay = document.getElementById('loadingOverlay');
     const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
     
     // Configuration
     const MAX_FILES = 5;
@@ -33,11 +34,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     function highlight() {
-        dropzone.classList.add('border-blue-500', 'bg-blue-50');
+        dropzone.classList.add('border-blue-400', 'bg-blue-50', 'shadow-lg');
+        dropzone.style.borderStyle = 'solid';
     }
     
     function unhighlight() {
-        dropzone.classList.remove('border-blue-500', 'bg-blue-50');
+        dropzone.classList.remove('border-blue-400', 'bg-blue-50', 'shadow-lg');
+        dropzone.style.borderStyle = 'dashed';
     }
     
     // Handle dropped files
@@ -110,23 +113,43 @@ document.addEventListener('DOMContentLoaded', function() {
         
         reader.onload = function(e) {
             const previewDiv = document.createElement('div');
-            previewDiv.className = 'relative aspect-square bg-gray-100 rounded-lg overflow-hidden';
+            previewDiv.className = 'relative aspect-square bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md hover:scale-105';
             
             const img = document.createElement('img');
             img.src = e.target.result;
-            img.className = 'w-full h-full object-contain';
+            img.className = 'w-full h-full object-cover';
             img.alt = file.name;
             
+            // Create a container for the file info
+            const infoContainer = document.createElement('div');
+            infoContainer.className = 'absolute bottom-0 left-0 right-0 backdrop-blur-sm bg-white/80 py-2 px-3';
+            
+            // Create file name element
             const nameLabel = document.createElement('div');
-            nameLabel.className = 'absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 truncate';
-            nameLabel.textContent = file.name;
+            nameLabel.className = 'text-gray-800 text-xs font-medium truncate';
+            nameLabel.textContent = file.name.split('.').slice(0, -1).join('.');
+            
+            // Create file size element
+            const sizeLabel = document.createElement('div');
+            sizeLabel.className = 'text-gray-500 text-xs';
+            sizeLabel.textContent = formatFileSize(file.size);
+            
+            infoContainer.appendChild(nameLabel);
+            infoContainer.appendChild(sizeLabel);
             
             previewDiv.appendChild(img);
-            previewDiv.appendChild(nameLabel);
+            previewDiv.appendChild(infoContainer);
             imagePreviewContainer.appendChild(previewDiv);
         };
         
         reader.readAsDataURL(file);
+    }
+    
+    // Format file size in a human-readable format
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+        else return (bytes / 1048576).toFixed(1) + ' MB';
     }
     
     // Display error message
@@ -177,13 +200,46 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Simulate progress (since we can't track actual API progress)
         let progress = 0;
+        const progressMessages = [
+            "Starting analysis...",
+            "Processing images...",
+            "Identifying product features...",
+            "Generating product details...",
+            "Creating description...",
+            "Adding product tags...",
+            "Finalizing content..."
+        ];
+        let messageIndex = 0;
+        
         const interval = setInterval(() => {
-            progress += Math.random() * 10;
+            progress += Math.random() * 8;
+            
+            if (progress > 15 && messageIndex < 1) {
+                messageIndex = 1;
+                progressText.textContent = progressMessages[messageIndex];
+            } else if (progress > 30 && messageIndex < 2) {
+                messageIndex = 2;
+                progressText.textContent = progressMessages[messageIndex];
+            } else if (progress > 45 && messageIndex < 3) {
+                messageIndex = 3;
+                progressText.textContent = progressMessages[messageIndex];
+            } else if (progress > 60 && messageIndex < 4) {
+                messageIndex = 4;
+                progressText.textContent = progressMessages[messageIndex];
+            } else if (progress > 75 && messageIndex < 5) {
+                messageIndex = 5;
+                progressText.textContent = progressMessages[messageIndex];
+            } else if (progress > 85 && messageIndex < 6) {
+                messageIndex = 6;
+                progressText.textContent = progressMessages[messageIndex];
+            }
+            
             if (progress > 90) {
                 progress = 90; // Hold at 90% until complete
                 clearInterval(interval);
             }
+            
             progressBar.style.width = `${progress}%`;
-        }, 500);
+        }, 800);
     });
 });

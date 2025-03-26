@@ -8,174 +8,267 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
-    
+    <style>
+        body {
+            font-family: 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #ffffff;
+            color: #1d1d1f;
+        }
+        .apple-header {
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+        }
+        .apple-button {
+            background-color: #0071e3;
+            border-radius: 980px;
+            transition: all 0.3s ease;
+        }
+        .apple-button:hover {
+            background-color: #0077ED;
+        }
+        .tag-pill {
+            transition: all 0.3s ease;
+            border-radius: 980px;
+            font-size: 13px;
+        }
+        .tag-pill:hover {
+            transform: translateY(-2px);
+        }
+        .image-gallery {
+            height: 450px;
+        }
+        .nav-dot {
+            transition: all 0.3s ease;
+        }
+        .nav-dot:hover {
+            transform: scale(1.5);
+        }
+        .product-price {
+            font-size: 24px;
+            font-weight: 600;
+            color: #0071e3;
+        }
+        .specs-card {
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            border-radius: 8px;
+        }
+        .specs-card:hover {
+            border-left: 3px solid #0071e3;
+            transform: translateX(5px);
+        }
+        .product-card {
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        .section-card {
+            border-radius: 18px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <div class="container mx-auto px-4 py-8 max-w-5xl">
-        <header class="mb-8">
-            <div class="flex justify-between items-center">
-                <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Product Catalog Result</h1>
-                <a href="{{ url_for('index') }}" class="text-blue-600 hover:text-blue-800 flex items-center">
-                    <i class="fas fa-arrow-left mr-1"></i> Back to Generator
+<body class="min-h-screen">
+    <header class="apple-header text-white py-3 sticky top-0 z-50">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <a href="{{ url_for('catalog') }}" class="text-xl font-medium flex items-center">
+                <i class="fas fa-cube mr-2"></i>
+                <span>Product Catalog</span>
+            </a>
+            <nav class="hidden md:flex space-x-8">
+                <a href="{{ url_for('index') }}" class="text-white hover:text-gray-300 px-2 py-1 font-light">Create</a>
+                <a href="{{ url_for('catalog') }}" class="text-white hover:text-gray-300 px-2 py-1 font-light">Browse</a>
+            </nav>
+            <div class="flex space-x-4">
+                <a href="{{ url_for('catalog') }}" class="text-white bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-full flex items-center transition-all text-sm">
+                    <i class="fas fa-th-large mr-2"></i> View Catalog
+                </a>
+                <a href="{{ url_for('index') }}" class="apple-button text-white px-4 py-2 flex items-center transition-all text-sm">
+                    <i class="fas fa-plus mr-2"></i> New Product
                 </a>
             </div>
-        </header>
+        </div>
+    </header>
 
-        <main>
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <!-- Product Header -->
-                <div class="bg-gray-800 text-white p-6">
-                    <div class="flex flex-wrap justify-between items-start">
-                        <div>
-                            <h2 class="text-2xl font-bold mb-1">{{ product_data.name }}</h2>
-                            <div class="flex flex-wrap items-center text-sm">
-                                <span class="bg-blue-500 text-white px-2 py-0.5 rounded mr-2 mb-1">{{ product_data.category }}</span>
-                                <span class="text-lg font-semibold">{{ product_data.price }}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-4 sm:mt-0">
-                            <button id="downloadJson" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center">
-                                <i class="fas fa-download mr-1"></i> Download JSON
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Product Content -->
-                <div class="p-6">
-                    <!-- Product Images and Short Description -->
-                    <div class="flex flex-wrap md:flex-nowrap gap-6 mb-8">
-                        <!-- Product Images Carousel -->
-                        <div class="w-full md:w-1/2 mb-4 md:mb-0">
-                            <div class="bg-gray-100 rounded-lg overflow-hidden aspect-square flex items-center justify-center">
-                                {% if product_data.images %}
-                                    <div id="imageCarousel" class="relative w-full h-full">
-                                        {% for image_path in product_data.images %}
-                                            <div class="carousel-item absolute inset-0 transition-opacity duration-300 {% if loop.first %}opacity-100{% else %}opacity-0{% endif %}">
-                                                <img src="/{{ image_path }}" alt="{{ product_data.name }}" class="w-full h-full object-contain">
-                                            </div>
-                                        {% endfor %}
-                                        
-                                        {% if product_data.images|length > 1 %}
-                                            <!-- Carousel Controls -->
-                                            <button id="prevImage" class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-gray-400">
-                                                <i class="fas fa-chevron-left text-gray-800"></i>
-                                            </button>
-                                            <button id="nextImage" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-gray-400">
-                                                <i class="fas fa-chevron-right text-gray-800"></i>
-                                            </button>
-                                            
-                                            <!-- Carousel Indicators -->
-                                            <div class="absolute bottom-2 left-0 right-0 flex justify-center space-x-2">
-                                                {% for _ in product_data.images %}
-                                                    <button class="carousel-dot w-2 h-2 rounded-full bg-gray-400 {% if loop.first %}bg-gray-800{% endif %}" data-index="{{ loop.index0 }}"></button>
-                                                {% endfor %}
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                {% else %}
-                                    <div class="text-gray-500">
-                                        <i class="fas fa-image text-4xl mb-2"></i>
-                                        <p>No images available</p>
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <!-- Short Description and Tags -->
-                        <div class="w-full md:w-1/2">
-                            {% if 'error' in result %}
-                                <div class="bg-red-50 text-red-800 p-4 rounded-md mb-4">
-                                    <p class="font-semibold">Error generating content:</p>
-                                    <p>{{ result.error }}</p>
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Product Overview -->
+        <div class="section-card bg-white overflow-hidden mb-10">
+            <div class="md:flex">
+                <!-- Left Column - Gallery -->
+                <div class="md:w-1/2 relative image-gallery bg-gray-50">
+                    {% if product_data.images %}
+                        <div id="imageCarousel" class="relative w-full h-full">
+                            {% for image_path in product_data.images %}
+                                <div class="carousel-item absolute inset-0 transition-opacity duration-500 ease-in-out {% if loop.first %}opacity-100{% else %}opacity-0{% endif %}">
+                                    <img src="{{ url_for('serve_raw_file', filename=image_path.replace('raw/', '')) }}" alt="{{ product_data.name }}" class="w-full h-full object-contain p-4">
                                 </div>
-                            {% else %}
-                                <h3 class="text-xl font-semibold text-gray-800 mb-3">Summary</h3>
-                                <p class="text-gray-700 mb-6">{{ result.short_description }}</p>
+                            {% endfor %}
+                            
+                            {% if product_data.images|length > 1 %}
+                                <!-- Custom Navigation Controls -->
+                                <button id="prevImage" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 w-10 h-10 rounded-full flex items-center justify-center focus:outline-none shadow-lg z-10 transition-all">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <button id="nextImage" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 w-10 h-10 rounded-full flex items-center justify-center focus:outline-none shadow-lg z-10 transition-all">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
                                 
-                                <h3 class="text-xl font-semibold text-gray-800 mb-3">Tags</h3>
-                                <div class="flex flex-wrap gap-2 mb-6">
-                                    {% for tag in result.tags %}
-                                        <span class="bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm">{{ tag }}</span>
-                                    {% endfor %}
-                                </div>
-                                
-                                <h3 class="text-xl font-semibold text-gray-800 mb-3">Target Audience</h3>
-                                <div class="flex flex-wrap gap-2">
-                                    {% for audience in result.target_audience %}
-                                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">{{ audience }}</span>
+                                <!-- Thumbnail Navigation -->
+                                <div class="absolute bottom-6 left-0 right-0 flex justify-center space-x-3">
+                                    {% for image_path in product_data.images %}
+                                        <button class="nav-dot w-3 h-3 rounded-full border-2 border-white {% if loop.first %}bg-blue-500{% else %}bg-gray-400{% endif %} shadow-lg" data-index="{{ loop.index0 }}"></button>
                                     {% endfor %}
                                 </div>
                             {% endif %}
                         </div>
+                    {% else %}
+                        <div class="flex items-center justify-center h-full">
+                            <div class="text-center text-gray-400">
+                                <i class="fas fa-cube text-5xl mb-3"></i>
+                                <p class="text-lg font-light">No images available</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Right Column - Product Info -->
+                <div class="md:w-1/2 p-8">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="text-sm text-blue-500 font-medium mb-1">{{ product_data.category }}</div>
+                            <h2 class="text-2xl font-medium text-gray-900 mb-2">{{ product_data.name }}</h2>
+                            <div class="text-xs text-gray-400 mb-1">Product ID: {{ result.product_id }}</div>
+                        </div>
+                        <span class="product-price">{{ product_data.price }}</span>
                     </div>
                     
-                    <!-- Detailed Description -->
-                    <div class="mb-8">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-3">Detailed Description</h3>
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <p class="text-gray-700 whitespace-pre-line">{{ result.detailed_description }}</p>
+                    <div class="my-6">
+                        <h3 class="font-medium text-lg text-gray-800 mb-2">Product Overview</h3>
+                        <p class="text-gray-600 leading-relaxed text-sm font-light">{{ result.short_description }}</p>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="font-medium text-lg text-gray-800 mb-2">Tags</h3>
+                        <div class="flex flex-wrap gap-2">
+                            {% for tag in result.tags %}
+                                <span class="tag-pill bg-blue-50 text-blue-600 px-3.5 py-1 text-sm font-light">{{ tag }}</span>
+                            {% endfor %}
                         </div>
                     </div>
-                    <!-- Image URLs (for developers) -->
-                    {% if result.image_urls %}
-                    <div class="mb-8">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-3">Image URLs</h3>
-                        <div class="bg-gray-50 p-4 rounded-lg overflow-x-auto">
-                            <ul class="list-disc pl-5 space-y-1 text-gray-700">
-                                {% for url in result.image_urls %}
-                                    <li>
-                                        <a href="{{ url }}" target="_blank" class="text-blue-600 hover:underline break-all">
-                                            {{ url }}
-                                        </a>
-                                    </li>
-                                {% endfor %}
-                            </ul>
+                    
+                    <div class="mb-6">
+                        <h3 class="font-medium text-lg text-gray-800 mb-2">Target Audience</h3>
+                        <div class="flex flex-wrap gap-2">
+                            {% for audience in result.target_audience %}
+                                <span class="tag-pill bg-green-50 text-green-600 px-3.5 py-1 text-sm font-light">{{ audience }}</span>
+                            {% endfor %}
                         </div>
                     </div>
-                    {% endif %}
-                    <!-- Specifications and SEO Keywords -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <h3 class="text-xl font-semibold text-gray-800 mb-3">Specifications</h3>
-                            <ul class="list-disc pl-5 space-y-1 text-gray-700">
-                                {% for spec in result.specifications %}
-                                    <li>{{ spec }}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        
-                        <div>
-                            <h3 class="text-xl font-semibold text-gray-800 mb-3">SEO Keywords</h3>
-                            <div class="flex flex-wrap gap-2">
-                                {% for keyword in result.seo_keywords %}
-                                    <span class="bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm">{{ keyword }}</span>
-                                {% endfor %}
+                    
+                    <button id="downloadJson" class="mt-4 w-full py-3 apple-button text-white rounded-full font-medium flex items-center justify-center transition-all">
+                        <i class="fas fa-download mr-2"></i> Download Product JSON
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Detailed Information -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <!-- Detailed Description Panel -->
+            <div class="md:col-span-2 section-card bg-white overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-xl font-medium text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-file-alt text-blue-500 mr-2"></i> Detailed Description
+                    </h3>
+                    <div class="prose max-w-none text-gray-600">
+                        <p class="whitespace-pre-line leading-relaxed text-sm font-light">{{ result.detailed_description }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Specifications Panel -->
+            <div class="section-card bg-white overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-xl font-medium text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-clipboard-list text-blue-500 mr-2"></i> Specifications
+                    </h3>
+                    <div class="space-y-3">
+                        {% for spec in result.specifications %}
+                            <div class="specs-card bg-gray-50 p-3.5 rounded-lg">
+                                <p class="text-gray-600 text-sm font-light">{{ spec }}</p>
                             </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SEO and URLs Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            <!-- SEO Keywords -->
+            <div class="section-card bg-white overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-xl font-medium text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-search text-blue-500 mr-2"></i> SEO Keywords
+                    </h3>
+                    <div class="flex flex-wrap gap-2">
+                        {% for keyword in result.seo_keywords %}
+                            <span class="tag-pill bg-gray-50 text-gray-600 px-3.5 py-1 text-sm font-light">{{ keyword }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Image URLs -->
+            {% if result.image_urls %}
+            <div class="section-card bg-white overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-xl font-medium text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-link text-blue-500 mr-2"></i> Image URLs
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <div class="space-y-2">
+                            {% for url in result.image_urls %}
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <a href="{{ url }}" target="_blank" class="text-blue-500 hover:text-blue-700 break-all text-sm font-light">
+                                        {{ url }}
+                                    </a>
+                                </div>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
             </div>
-        </main>
-        
-        <footer class="mt-12 text-center text-gray-500 text-sm">
-            <p>&copy; 2024 Product Catalog Generator. Powered by OpenAI.</p>
-        </footer>
-    </div>
+            {% endif %}
+        </div>
+    </main>
+    
+    <footer class="mt-12 pt-10 pb-8 border-t border-gray-200 text-center">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-center space-x-8 mb-8">
+                <a href="{{ url_for('index') }}" class="text-gray-500 hover:text-gray-700 text-sm">Create Product</a>
+                <a href="{{ url_for('catalog') }}" class="text-gray-500 hover:text-gray-700 text-sm">Browse Catalog</a>
+            </div>
+            <p class="text-gray-400 text-xs mb-2">&copy; 2025 Product Catalog Generator. All rights reserved.</p>
+            <p class="text-gray-400 text-xs flex items-center justify-center">
+                <span>Powered by</span>
+                <svg class="h-4 w-4 mx-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.5093-2.6067-1.4997z" />
+                </svg>
+                <span>OpenAI</span>
+            </p>
+        </div>
+    </footer>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Image Carousel Logic
             const carouselItems = document.querySelectorAll('.carousel-item');
-            const carouselDots = document.querySelectorAll('.carousel-dot');
+            const navDots = document.querySelectorAll('.nav-dot');
             const prevButton = document.getElementById('prevImage');
             const nextButton = document.getElementById('nextImage');
             let currentIndex = 0;
@@ -187,9 +280,9 @@
                     item.classList.remove('opacity-100');
                 });
                 
-                // Update dots
-                carouselDots.forEach(dot => {
-                    dot.classList.remove('bg-gray-800');
+                // Update navigation dots
+                navDots.forEach(dot => {
+                    dot.classList.remove('bg-blue-500');
                     dot.classList.add('bg-gray-400');
                 });
                 
@@ -197,9 +290,9 @@
                 carouselItems[index].classList.remove('opacity-0');
                 carouselItems[index].classList.add('opacity-100');
                 
-                // Update dot
-                carouselDots[index].classList.remove('bg-gray-400');
-                carouselDots[index].classList.add('bg-gray-800');
+                // Update active dot
+                navDots[index].classList.remove('bg-gray-400');
+                navDots[index].classList.add('bg-blue-500');
                 
                 currentIndex = index;
             }
@@ -219,18 +312,45 @@
                 });
                 
                 // Set up dot navigation
-                carouselDots.forEach(dot => {
+                navDots.forEach(dot => {
                     dot.addEventListener('click', () => {
                         const index = parseInt(dot.getAttribute('data-index'));
                         showImage(index);
                     });
                 });
+                
+                // Auto play carousel
+                let slideInterval = setInterval(() => {
+                    let newIndex = currentIndex + 1;
+                    if (newIndex >= carouselItems.length) newIndex = 0;
+                    showImage(newIndex);
+                }, 5000);
+                
+                // Pause carousel on hover
+                const carousel = document.getElementById('imageCarousel');
+                if (carousel) {
+                    carousel.addEventListener('mouseenter', () => {
+                        clearInterval(slideInterval);
+                    });
+                    
+                    carousel.addEventListener('mouseleave', () => {
+                        slideInterval = setInterval(() => {
+                            let newIndex = currentIndex + 1;
+                            if (newIndex >= carouselItems.length) newIndex = 0;
+                            showImage(newIndex);
+                        }, 5000);
+                    });
+                }
             }
             
             // Download JSON functionality
             const downloadButton = document.getElementById('downloadJson');
             if (downloadButton) {
                 downloadButton.addEventListener('click', function() {
+                    // Add loading state
+                    downloadButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
+                    downloadButton.disabled = true;
+                    
                     fetch('/download/{{ timestamp }}')
                         .then(response => response.json())
                         .then(data => {
@@ -248,10 +368,46 @@
                             // Clean up
                             document.body.removeChild(a);
                             URL.revokeObjectURL(url);
+                            
+                            // Reset button
+                            setTimeout(() => {
+                                downloadButton.innerHTML = '<i class="fas fa-download mr-2"></i> Download Product JSON';
+                                downloadButton.disabled = false;
+                            }, 1000);
                         })
-                        .catch(error => console.error('Error downloading JSON:', error));
+                        .catch(error => {
+                            console.error('Error downloading JSON:', error);
+                            downloadButton.innerHTML = '<i class="fas fa-exclamation-circle mr-2"></i> Download Failed';
+                            setTimeout(() => {
+                                downloadButton.innerHTML = '<i class="fas fa-download mr-2"></i> Try Again';
+                                downloadButton.disabled = false;
+                            }, 2000);
+                        });
                 });
             }
+            
+            // Animate elements on scroll
+            const animateOnScroll = () => {
+                const elements = document.querySelectorAll('.specs-card, .tag-pill');
+                elements.forEach(el => {
+                    const rect = el.getBoundingClientRect();
+                    const isVisible = (rect.top <= window.innerHeight * 0.8);
+                    if (isVisible) {
+                        el.style.opacity = '1';
+                    }
+                });
+            };
+            
+            // Set initial opacity for animation
+            document.querySelectorAll('.specs-card, .tag-pill').forEach(el => {
+                el.style.opacity = '0.7';
+                el.style.transition = 'opacity 0.5s ease, transform 0.3s ease';
+            });
+            
+            // Listen for scroll events
+            window.addEventListener('scroll', animateOnScroll);
+            // Initial check
+            animateOnScroll();
         });
     </script>
 </body>
