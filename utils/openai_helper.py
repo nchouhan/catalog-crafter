@@ -37,9 +37,15 @@ def analyze_product(product_data, base64_images):
                     "specifications": ["spec1", "spec2", ...],
                     "tags": ["tag1", "tag2", ...],
                     "seo_keywords": ["keyword1", "keyword2", ...],
-                    "target_audience": ["audience1", "audience2", ...]
+                    "target_audience": ["audience1", "audience2", ...],
+                    "colors": ["color1", "color2", ...],
+                    "materials": ["material1", "material2", ...],
+                    "styles": ["style1", "style2", ...]
                 }
-                Be professional, specific, and make the descriptions marketable.
+                For colors, include all colors present in the product.
+                For materials, include all materials used in the product construction.
+                For styles, include descriptive style terms like casual, formal, sporty, etc.
+                Be specific with all attributes, professional, and make the descriptions marketable.
                 """
             }
         ]
@@ -93,5 +99,8 @@ def analyze_product(product_data, base64_images):
             "specifications": [],
             "tags": [],
             "seo_keywords": [],
-            "target_audience": []
+            "target_audience": [],
+            "colors": [],
+            "materials": [],
+            "styles": []
         }

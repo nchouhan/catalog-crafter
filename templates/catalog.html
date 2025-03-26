@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Catalog</title>
+    <!-- TailwindCSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .sport-gradient {
+            background: linear-gradient(135deg, #0b132b 0%, #3a506b 100%);
+        }
+        .product-card {
+            transition: all 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .filter-tag {
+            transition: all 0.2s ease;
+        }
+        .filter-tag:hover, .filter-tag.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .category-filter {
+            border-left: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .category-filter:hover, .category-filter.active {
+            border-left-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <header class="sport-gradient text-white py-4">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Product Catalog</h1>
+            <div class="flex space-x-4">
+                <a href="{{ url_for('index') }}" class="bg-white text-gray-800 hover:bg-gray-200 px-4 py-2 rounded-full flex items-center transition-all">
+                    <i class="fas fa-plus mr-2"></i> New Product
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <!-- Search and Filter Bar -->
+        <div class="mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="mb-4">
+                    <form id="searchForm" method="GET" action="{{ url_for('catalog') }}">
+                        <div class="flex flex-wrap gap-4">
+                            <div class="flex-grow">
+                                <div class="relative">
+                                    <input type="text" name="q" id="searchInput" placeholder="Search products..." 
+                                        value="{{ request.args.get('q', '') }}"
+                                        class="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
+                                </div>
+                            </div>
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium">
+                                Search
+                            </button>
+                            <a href="{{ url_for('catalog') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg font-medium flex items-center">
+                                <i class="fas fa-redo-alt mr-2"></i> Reset
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Active Filters -->
+                {% if any_filters_active %}
+                <div class="mb-4 pt-4 border-t border-gray-200">
+                    <h3 class="text-sm font-medium text-gray-500 mb-2">Active Filters:</h3>
+                    <div class="flex flex-wrap gap-2">
+                        {% if request.args.get('q') %}
+                            <div class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center">
+                                <span>Search: {{ request.args.get('q') }}</span>
+                                <a href="{{ url_for('catalog') }}{% if request.args|length > 1 %}?{% for key, value in request.args.items() %}{% if key != 'q' %}{{ key }}={{ value }}{% if not loop.last %}&{% endif %}{% endif %}{% endfor %}{% endif %}" 
+                                   class="ml-2 text-blue-600 hover:text-blue-800">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </div>
+                        {% endif %}
+                        
+                        {% for filter_name, filter_value in active_filters.items() %}
+                            <div class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center">
+                                <span>{{ filter_name }}: {{ filter_value }}</span>
+                                <a href="{{ url_for('catalog') }}{% if request.args|length > 1 %}?{% for key, value in request.args.items() %}{% if key != filter_name %}{{ key }}={{ value }}{% if not loop.last %}&{% endif %}{% endif %}{% endfor %}{% endif %}" 
+                                   class="ml-2 text-blue-600 hover:text-blue-800">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </div>
+                        {% endfor %}
+                        
+                        <a href="{{ url_for('catalog') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded-full text-sm">
+                            Clear All
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Expandable Filter Sections -->
+                <div id="filterSections" class="pt-4 border-t border-gray-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Category Filter -->
+                        <div>
+                            <h3 class="font-medium text-gray-800 mb-2">Category</h3>
+                            <div class="max-h-48 overflow-y-auto space-y-1">
+                                {% for category in filters.categories %}
+                                <a href="{{ url_for('catalog') }}?category={{ category }}{% for key, value in request.args.items() %}{% if key != 'category' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                                   class="category-filter block px-3 py-2 rounded {% if request.args.get('category') == category %}active{% endif %}">
+                                    {{ category }}
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Color Filter -->
+                        <div>
+                            <h3 class="font-medium text-gray-800 mb-2">Color</h3>
+                            <div class="flex flex-wrap gap-2">
+                                {% for color in filters.colors %}
+                                <a href="{{ url_for('catalog') }}?color={{ color }}{% for key, value in request.args.items() %}{% if key != 'color' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                                   class="filter-tag px-3 py-1 rounded-full bg-gray-100 text-sm {% if request.args.get('color') == color %}active{% endif %}">
+                                    {{ color }}
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Material Filter -->
+                        <div>
+                            <h3 class="font-medium text-gray-800 mb-2">Material</h3>
+                            <div class="flex flex-wrap gap-2">
+                                {% for material in filters.materials %}
+                                <a href="{{ url_for('catalog') }}?material={{ material }}{% for key, value in request.args.items() %}{% if key != 'material' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                                   class="filter-tag px-3 py-1 rounded-full bg-gray-100 text-sm {% if request.args.get('material') == material %}active{% endif %}">
+                                    {{ material }}
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Style Filter -->
+                        <div>
+                            <h3 class="font-medium text-gray-800 mb-2">Style</h3>
+                            <div class="flex flex-wrap gap-2">
+                                {% for style in filters.styles %}
+                                <a href="{{ url_for('catalog') }}?style={{ style }}{% for key, value in request.args.items() %}{% if key != 'style' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                                   class="filter-tag px-3 py-1 rounded-full bg-gray-100 text-sm {% if request.args.get('style') == style %}active{% endif %}">
+                                    {{ style }}
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Target Audience Filter -->
+                        <div>
+                            <h3 class="font-medium text-gray-800 mb-2">Target Audience</h3>
+                            <div class="flex flex-wrap gap-2">
+                                {% for audience in filters.audiences %}
+                                <a href="{{ url_for('catalog') }}?audience={{ audience }}{% for key, value in request.args.items() %}{% if key != 'audience' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                                   class="filter-tag px-3 py-1 rounded-full bg-gray-100 text-sm {% if request.args.get('audience') == audience %}active{% endif %}">
+                                    {{ audience }}
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Count and Sort -->
+        <div class="flex justify-between items-center mb-6">
+            <p class="text-gray-600"><span class="font-medium">{{ products|length }}</span> products found</p>
+            <div class="flex items-center space-x-2">
+                <label for="sort" class="text-gray-600">Sort by:</label>
+                <select id="sort" class="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        onchange="window.location.href=this.value">
+                    <option value="{{ url_for('catalog') }}?sort=newest{% for key, value in request.args.items() %}{% if key != 'sort' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                            {% if request.args.get('sort') == 'newest' or not request.args.get('sort') %}selected{% endif %}>
+                        Newest
+                    </option>
+                    <option value="{{ url_for('catalog') }}?sort=name_asc{% for key, value in request.args.items() %}{% if key != 'sort' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                            {% if request.args.get('sort') == 'name_asc' %}selected{% endif %}>
+                        Name (A-Z)
+                    </option>
+                    <option value="{{ url_for('catalog') }}?sort=name_desc{% for key, value in request.args.items() %}{% if key != 'sort' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                            {% if request.args.get('sort') == 'name_desc' %}selected{% endif %}>
+                        Name (Z-A)
+                    </option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Product Grid -->
+        {% if products %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {% for product in products %}
+            <a href="{{ url_for('view_product', product_id=product.product_id) }}" class="product-card bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="h-52 overflow-hidden bg-gray-100">
+                    {% if product.image_urls %}
+                    <img src="{{ product.image_urls[0] }}" alt="{{ product.product_name }}" class="w-full h-full object-cover">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center">
+                        <i class="fas fa-image text-gray-300 text-4xl"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="p-4">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h3 class="font-semibold text-gray-900 leading-tight">{{ product.product_name }}</h3>
+                            <p class="text-sm text-blue-600">{{ product.category }}</p>
+                        </div>
+                        <span class="text-gray-900 font-bold">{{ product.price }}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 line-clamp-2 mb-3">{{ product.short_description }}</p>
+                    <div class="flex flex-wrap gap-1">
+                        {% for tag in product.tags[:3] %}
+                        <span class="px-2 py-1 bg-gray-100 text-xs rounded-full">{{ tag }}</span>
+                        {% endfor %}
+                        {% if product.tags|length > 3 %}
+                        <span class="px-2 py-1 bg-gray-100 text-xs rounded-full">+{{ product.tags|length - 3 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-white rounded-xl shadow-lg p-12 text-center">
+            <i class="fas fa-search text-gray-300 text-5xl mb-4"></i>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">No products found</h2>
+            <p class="text-gray-600 mb-6">Try adjusting your search or filter criteria</p>
+            <a href="{{ url_for('catalog') }}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium">
+                Clear All Filters
+            </a>
+        </div>
+        {% endif %}
+    </main>
+    
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p class="mb-2">&copy; 2024 Product Catalog Generator</p>
+            <p class="text-gray-400 text-sm">Powered by OpenAI API</p>
+        </div>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle filter sections
+            const toggleFilterBtn = document.getElementById('toggleFilterBtn');
+            const filterSections = document.getElementById('filterSections');
+            
+            if (toggleFilterBtn) {
+                toggleFilterBtn.addEventListener('click', function() {
+                    if (filterSections.classList.contains('hidden')) {
+                        filterSections.classList.remove('hidden');
+                        toggleFilterBtn.innerHTML = '<i class="fas fa-chevron-up mr-1"></i> Hide Filters';
+                    } else {
+                        filterSections.classList.add('hidden');
+                        toggleFilterBtn.innerHTML = '<i class="fas fa-chevron-down mr-1"></i> Show Filters';
+                    }
+                });
+            }
+            
+            // Animation for product cards on scroll
+            const animateOnScroll = () => {
+                const cards = document.querySelectorAll('.product-card');
+                cards.forEach(card => {
+                    const rect = card.getBoundingClientRect();
+                    const isVisible = (rect.top <= window.innerHeight * 0.9);
+                    if (isVisible) {
+                        card.style.opacity = '1';
+                    }
+                });
+            };
+            
+            // Set initial opacity for animation
+            document.querySelectorAll('.product-card').forEach(card => {
+                card.style.opacity = '0.5';
+                card.style.transition = 'opacity 0.5s ease, transform 0.3s ease';
+            });
+            
+            // Listen for scroll events
+            window.addEventListener('scroll', animateOnScroll);
+            // Initial check
+            animateOnScroll();
+        });
+    </script>
+</body>
+</html>

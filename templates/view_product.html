@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.product_name }} - Product Details</title>
+    <!-- TailwindCSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .sport-gradient {
+            background: linear-gradient(135deg, #0b132b 0%, #3a506b 100%);
+        }
+        .tag-pill {
+            transition: all 0.3s ease;
+        }
+        .tag-pill:hover {
+            transform: translateY(-2px);
+        }
+        .image-gallery {
+            height: 450px;
+        }
+        .nav-dot {
+            transition: all 0.3s ease;
+        }
+        .nav-dot:hover {
+            transform: scale(1.5);
+        }
+        .product-price {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .specs-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        .specs-card:hover {
+            border-left: 4px solid #4299e1;
+            transform: translateX(5px);
+        }
+    </style>
+</head>
+<body>
+    <header class="sport-gradient text-white py-4">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Product Catalog</h1>
+            <div class="flex space-x-4">
+                <a href="{{ url_for('catalog') }}" class="bg-white text-gray-800 hover:bg-gray-200 px-4 py-2 rounded-full flex items-center transition-all">
+                    <i class="fas fa-th-large mr-2"></i> All Products
+                </a>
+                <a href="{{ url_for('index') }}" class="bg-white text-gray-800 hover:bg-gray-200 px-4 py-2 rounded-full flex items-center transition-all">
+                    <i class="fas fa-plus mr-2"></i> New Product
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Product Overview -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-10">
+            <div class="md:flex">
+                <!-- Left Column - Gallery -->
+                <div class="md:w-1/2 relative image-gallery bg-gray-50">
+                    {% if product.image_urls %}
+                        <div id="imageCarousel" class="relative w-full h-full">
+                            {% for image_url in product.image_urls %}
+                                <div class="carousel-item absolute inset-0 transition-opacity duration-500 ease-in-out {% if loop.first %}opacity-100{% else %}opacity-0{% endif %}">
+                                    <img src="{{ image_url }}" alt="{{ product.product_name }}" class="w-full h-full object-contain p-4">
+                                </div>
+                            {% endfor %}
+                            
+                            {% if product.image_urls|length > 1 %}
+                                <!-- Custom Navigation Controls -->
+                                <button id="prevImage" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 w-10 h-10 rounded-full flex items-center justify-center focus:outline-none shadow-lg z-10 transition-all">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <button id="nextImage" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 w-10 h-10 rounded-full flex items-center justify-center focus:outline-none shadow-lg z-10 transition-all">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                                
+                                <!-- Thumbnail Navigation -->
+                                <div class="absolute bottom-6 left-0 right-0 flex justify-center space-x-3">
+                                    {% for _ in product.image_urls %}
+                                        <button class="nav-dot w-3 h-3 rounded-full border-2 border-white {% if loop.first %}bg-blue-500{% else %}bg-gray-400{% endif %} shadow-lg" data-index="{{ loop.index0 }}"></button>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="flex items-center justify-center h-full">
+                            <div class="text-center text-gray-500">
+                                <i class="fas fa-image text-6xl mb-3"></i>
+                                <p class="text-xl">No images available</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Right Column - Product Info -->
+                <div class="md:w-1/2 p-8">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="text-sm text-blue-600 font-medium mb-1">{{ product.category }}</div>
+                            <h2 class="text-3xl font-bold text-gray-800 mb-2">{{ product.product_name }}</h2>
+                            <div class="text-xs text-gray-500 mb-1">Product ID: {{ product.product_id }}</div>
+                        </div>
+                        <span class="product-price text-blue-600">{{ product.price }}</span>
+                    </div>
+                    
+                    <div class="my-6">
+                        <h3 class="font-semibold text-lg text-gray-800 mb-2">Product Overview</h3>
+                        <p class="text-gray-600 leading-relaxed">{{ product.short_description }}</p>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="font-semibold text-lg text-gray-800 mb-2">Tags</h3>
+                        <div class="flex flex-wrap gap-2">
+                            {% for tag in product.tags %}
+                                <span class="tag-pill bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="font-semibold text-lg text-gray-800 mb-2">Target Audience</h3>
+                        <div class="flex flex-wrap gap-2">
+                            {% for audience in product.target_audience %}
+                                <span class="tag-pill bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">{{ audience }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <a href="{{ url_for('download', timestamp=product.product_id) }}" id="downloadJson" class="mt-2 w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center justify-center transition-all shadow-md">
+                        <i class="fas fa-download mr-2"></i> Download Product JSON
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Detailed Information -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <!-- Detailed Description Panel -->
+            <div class="md:col-span-2 bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-file-alt text-blue-600 mr-2"></i> Detailed Description
+                    </h3>
+                    <div class="prose max-w-none text-gray-600">
+                        <p class="whitespace-pre-line leading-relaxed">{{ product.detailed_description }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Specifications Panel -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-clipboard-list text-blue-600 mr-2"></i> Specifications
+                    </h3>
+                    <div class="space-y-3">
+                        {% for spec in product.specifications %}
+                            <div class="specs-card bg-gray-50 p-3 rounded-lg">
+                                <p class="text-gray-700">{{ spec }}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SEO Keywords Section -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-10">
+            <div class="p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-search text-blue-600 mr-2"></i> SEO Keywords
+                </h3>
+                <div class="flex flex-wrap gap-2">
+                    {% for keyword in product.seo_keywords %}
+                        <span class="tag-pill bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">{{ keyword }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer class="bg-gray-800 text-white py-6">
+        <div class="container mx-auto px-4 text-center">
+            <p class="mb-2">&copy; 2024 Product Catalog Generator</p>
+            <p class="text-gray-400 text-sm">Powered by OpenAI API</p>
+        </div>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Image Carousel Logic
+            const carouselItems = document.querySelectorAll('.carousel-item');
+            const navDots = document.querySelectorAll('.nav-dot');
+            const prevButton = document.getElementById('prevImage');
+            const nextButton = document.getElementById('nextImage');
+            let currentIndex = 0;
+            
+            function showImage(index) {
+                // Hide all images
+                carouselItems.forEach(item => {
+                    item.classList.add('opacity-0');
+                    item.classList.remove('opacity-100');
+                });
+                
+                // Update navigation dots
+                navDots.forEach(dot => {
+                    dot.classList.remove('bg-blue-500');
+                    dot.classList.add('bg-gray-400');
+                });
+                
+                // Show selected image
+                carouselItems[index].classList.remove('opacity-0');
+                carouselItems[index].classList.add('opacity-100');
+                
+                // Update active dot
+                navDots[index].classList.remove('bg-gray-400');
+                navDots[index].classList.add('bg-blue-500');
+                
+                currentIndex = index;
+            }
+            
+            // Set up controls if there are multiple images
+            if (carouselItems.length > 1 && prevButton && nextButton) {
+                prevButton.addEventListener('click', () => {
+                    let newIndex = currentIndex - 1;
+                    if (newIndex < 0) newIndex = carouselItems.length - 1;
+                    showImage(newIndex);
+                });
+                
+                nextButton.addEventListener('click', () => {
+                    let newIndex = currentIndex + 1;
+                    if (newIndex >= carouselItems.length) newIndex = 0;
+                    showImage(newIndex);
+                });
+                
+                // Set up dot navigation
+                navDots.forEach(dot => {
+                    dot.addEventListener('click', () => {
+                        const index = parseInt(dot.getAttribute('data-index'));
+                        showImage(index);
+                    });
+                });
+                
+                // Auto play carousel
+                let slideInterval = setInterval(() => {
+                    let newIndex = currentIndex + 1;
+                    if (newIndex >= carouselItems.length) newIndex = 0;
+                    showImage(newIndex);
+                }, 5000);
+                
+                // Pause carousel on hover
+                const carousel = document.getElementById('imageCarousel');
+                if (carousel) {
+                    carousel.addEventListener('mouseenter', () => {
+                        clearInterval(slideInterval);
+                    });
+                    
+                    carousel.addEventListener('mouseleave', () => {
+                        slideInterval = setInterval(() => {
+                            let newIndex = currentIndex + 1;
+                            if (newIndex >= carouselItems.length) newIndex = 0;
+                            showImage(newIndex);
+                        }, 5000);
+                    });
+                }
+            }
+            
+            // Animate elements on scroll
+            const animateOnScroll = () => {
+                const elements = document.querySelectorAll('.specs-card, .tag-pill');
+                elements.forEach(el => {
+                    const rect = el.getBoundingClientRect();
+                    const isVisible = (rect.top <= window.innerHeight * 0.8);
+                    if (isVisible) {
+                        el.style.opacity = '1';
+                    }
+                });
+            };
+            
+            // Set initial opacity for animation
+            document.querySelectorAll('.specs-card, .tag-pill').forEach(el => {
+                el.style.opacity = '0.7';
+                el.style.transition = 'opacity 0.5s ease, transform 0.3s ease';
+            });
+            
+            // Listen for scroll events
+            window.addEventListener('scroll', animateOnScroll);
+            // Initial check
+            animateOnScroll();
+        });
+    </script>
+</body>
+</html>

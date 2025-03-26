@@ -113,9 +113,15 @@ def upload_product():
             image_url = url_for('serve_raw_file', filename=filename, _external=True)
             image_urls.append(image_url)
         
+         # Add product details to the result
+        result['product_id'] = timestamp  # Use timestamp as a unique identifier
+        result['product_name'] = product_data['name']
+        result['category'] = product_data['category']
+        result['price'] = product_data['price']
+
         # Add image URLs to the result
         result['image_urls'] = image_urls
-        
+
         # Save response to JSON file
         response_file = f"response/{timestamp}.json"
         with open(response_file, 'w') as f:
@@ -174,5 +180,207 @@ def serve_raw_file(filename):
     """Serve files from the raw directory."""
     return send_from_directory('raw', filename)
 
+@app.route('/catalog')
+def catalog():
+    """Display the catalog of all products."""
+    # Get search/filter parameters
+    query = request.args.get('q', '')
+    category_filter = request.args.get('category')
+    color_filter = request.args.get('color')
+    material_filter = request.args.get('material')
+    style_filter = request.args.get('style')
+    audience_filter = request.args.get('audience')
+    sort_by = request.args.get('sort', 'newest')
+    
+    # Load all products from response files
+    products = []
+    try:
+        # Get all JSON files in the response directory
+        response_files = os.listdir('response')
+        response_files = [f for f in response_files if f.endswith('.json')]
+        
+        for filename in response_files:
+            file_path = os.path.join('response', filename)
+            try:
+                with open(file_path, 'r') as f:
+                    product_data = json.load(f)
+                    if 'product_id' not in product_data:
+                        # Add product_id if not present (for backward compatibility)
+                        product_id = filename.replace('.json', '')
+                        product_data['product_id'] = product_id
+                    products.append(product_data)
+            except Exception as e:
+                logging.error(f"Error loading {file_path}: {str(e)}")
+                continue
+    except Exception as e:
+        logging.error(f"Error listing response directory: {str(e)}")
+    
+    # Extract filter options from all products
+    all_categories = set()
+    all_colors = set()
+    all_materials = set()
+    all_styles = set()
+    all_audiences = set()
+    
+    for product in products:
+        # Categories
+        if 'category' in product:
+            all_categories.add(product['category'])
+        
+        # Extract keywords from tags, specifications, and descriptions
+        all_tags = (product.get('tags', []) + 
+                   product.get('specifications', []) + 
+                   product.get('seo_keywords', []))
+        
+        # Colors
+        color_keywords = ['red', 'blue', 'green', 'yellow', 'black', 'white', 
+                         'orange', 'purple', 'pink', 'brown', 'gray', 'grey', 
+                         'silver', 'gold', 'beige', 'navy', 'teal']
+        for tag in all_tags:
+            for color in color_keywords:
+                if color.lower() in tag.lower():
+                    all_colors.add(color.title())
+        
+        # Materials
+        material_keywords = ['cotton', 'polyester', 'wool', 'leather', 'silk', 
+                           'nylon', 'linen', 'plastic', 'metal', 'wood', 
+                           'glass', 'ceramic', 'rubber', 'carbon fiber', 'canvas']
+        for tag in all_tags:
+            for material in material_keywords:
+                if material.lower() in tag.lower():
+                    all_materials.add(material.title())
+        
+        # Styles
+        style_keywords = ['casual', 'formal', 'sporty', 'vintage', 'modern', 
+                         'classic', 'elegant', 'bohemian', 'minimalist', 
+                         'retro', 'contemporary', 'urban', 'luxury']
+        for tag in all_tags:
+            for style in style_keywords:
+                if style.lower() in tag.lower():
+                    all_styles.add(style.title())
+        
+        # Target Audiences
+        if 'target_audience' in product:
+            for audience in product.get('target_audience', []):
+                all_audiences.add(audience)
+    
+    # Apply filters
+    filtered_products = []
+    for product in products:
+        # Skip products that don't match the search query
+        if query and query.lower() not in json.dumps(product).lower():
+            continue
+        
+        # Skip products that don't match the category filter
+        if category_filter and product.get('category') != category_filter:
+            continue
+        
+        # Skip products that don't match the color filter
+        if color_filter:
+            color_match = False
+            for tag in (product.get('tags', []) + product.get('specifications', []) + product.get('seo_keywords', [])):
+                if color_filter.lower() in tag.lower():
+                    color_match = True
+                    break
+            if not color_match:
+                continue
+        
+        # Skip products that don't match the material filter
+        if material_filter:
+            material_match = False
+            for tag in (product.get('tags', []) + product.get('specifications', []) + product.get('seo_keywords', [])):
+                if material_filter.lower() in tag.lower():
+                    material_match = True
+                    break
+            if not material_match:
+                continue
+        
+        # Skip products that don't match the style filter
+        if style_filter:
+            style_match = False
+            for tag in (product.get('tags', []) + product.get('specifications', []) + product.get('seo_keywords', [])):
+                if style_filter.lower() in tag.lower():
+                    style_match = True
+                    break
+            if not style_match:
+                continue
+        
+        # Skip products that don't match the audience filter
+        if audience_filter:
+            audience_match = False
+            for audience in product.get('target_audience', []):
+                if audience_filter.lower() in audience.lower():
+                    audience_match = True
+                    break
+            if not audience_match:
+                continue
+        
+        # Add product to filtered list
+        filtered_products.append(product)
+    
+    # Sort products
+    if sort_by == 'name_asc':
+        filtered_products.sort(key=lambda p: p.get('product_name', '').lower())
+    elif sort_by == 'name_desc':
+        filtered_products.sort(key=lambda p: p.get('product_name', '').lower(), reverse=True)
+    else:  # Default to newest
+        filtered_products.sort(key=lambda p: p.get('product_id', ''), reverse=True)
+    
+    # Prepare active filters display
+    active_filters = {}
+    if category_filter:
+        active_filters['Category'] = category_filter
+    if color_filter:
+        active_filters['Color'] = color_filter
+    if material_filter:
+        active_filters['Material'] = material_filter
+    if style_filter:
+        active_filters['Style'] = style_filter
+    if audience_filter:
+        active_filters['Audience'] = audience_filter
+    
+    # Check if any filters are active
+    any_filters_active = bool(query or active_filters)
+    
+    # Prepare filter options for display
+    filters = {
+        'categories': sorted(list(all_categories)),
+        'colors': sorted(list(all_colors)),
+        'materials': sorted(list(all_materials)),
+        'styles': sorted(list(all_styles)),
+        'audiences': sorted(list(all_audiences))
+    }
+    
+    return render_template('catalog.html', 
+                          products=filtered_products,
+                          filters=filters,
+                          active_filters=active_filters,
+                          any_filters_active=any_filters_active,
+                          request=request)
+@app.route('/product/<product_id>')
+def view_product(product_id):
+    """View a specific product."""
+    try:
+        # Load product data from JSON file
+        response_file = f"response/{product_id}.json"
+        if not os.path.exists(response_file):
+            flash('Product not found', 'error')
+            return redirect(url_for('catalog'))
+        
+        with open(response_file, 'r') as f:
+            product = json.load(f)
+        
+        # Add product_id if not present
+        if 'product_id' not in product:
+            product['product_id'] = product_id
+        
+        return render_template('view_product.html', product=product)
+    except Exception as e:
+        logging.error(f"Error loading product {product_id}: {str(e)}")
+        flash(f'Error loading product: {str(e)}', 'error')
+        return redirect(url_for('catalog'))
+
+
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5050, debug=True)

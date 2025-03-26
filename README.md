@@ -63,6 +63,10 @@ The application generates a JSON response with the following structure:
 
 ```json
 {
+  "product_id": "unique_timestamp_identifier",
+  "product_name": "Product Name",
+  "category": "Product Category",
+  "price": "Product Price",
   "short_description": "Brief summary of the product",
   "detailed_description": "Comprehensive product description",
   "specifications": ["spec1", "spec2", "..."],

@@ -8,13 +8,37 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .sport-gradient {
+            background: linear-gradient(135deg, #0b132b 0%, #3a506b 100%);
+        }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body>
+    <header class="sport-gradient text-white py-4">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Product Catalog Generator</h1>
+            <div class="flex space-x-4">
+                <a href="{{ url_for('catalog') }}" class="bg-white text-gray-800 hover:bg-gray-200 px-4 py-2 rounded-full flex items-center transition-all">
+                    <i class="fas fa-th-large mr-2"></i> View Catalog
+                </a>
+            </div>
+        </div>
+    </header>
+    
     <div class="container mx-auto px-4 py-8 max-w-4xl">
         <header class="mb-8 text-center">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">Product Catalog Generator</h1>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Create New Product</h2>
             <p class="text-gray-600">Upload product images and details to generate AI-powered descriptions and tags</p>
         </header>
 
@@ -111,10 +135,14 @@
             </div>
         </main>
         
-        <footer class="mt-12 text-center text-gray-500 text-sm">
-            <p>&copy; 2024 Product Catalog Generator. Powered by OpenAI.</p>
-        </footer>
     </div>
+    
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p class="mb-2">&copy; 2024 Product Catalog Generator</p>
+            <p class="text-gray-400 text-sm">Powered by OpenAI API</p>
+        </div>
+    </footer>
     
     <!-- Custom JavaScript -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
