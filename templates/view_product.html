@@ -270,7 +270,7 @@
         <!-- Detailed Information -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             <!-- Detailed Description Panel -->
-            <div class="md:col-span-2 section-card bg-white overflow-hidden">
+            <div class="md:col-span-2 section-card bg-white overflow-hidden mb-6">
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-xl font-medium text-gray-800 flex items-center">
@@ -289,6 +289,77 @@
                                 <button type="submit" class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm">Save Changes</button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Persona-Based Descriptions Panel -->
+            <div class="md:col-span-2 section-card bg-white overflow-hidden">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-medium text-gray-800 flex items-center">
+                            <i class="fas fa-users text-purple-500 mr-2"></i> Persona-Based Descriptions
+                        </h3>
+                        {% if product.persona_descriptions and (product.persona_descriptions.athleisure_enthusiast or product.persona_descriptions.performance_athlete or product.persona_descriptions.value_conscious_buyer) %}
+                            <button type="button" id="regeneratePersonasBtn" class="text-xs text-purple-500 flex items-center">
+                                <i class="fas fa-sync-alt mr-1"></i> Regenerate
+                            </button>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="prose max-w-none text-gray-600">
+                        {% if product.persona_descriptions and (product.persona_descriptions.athleisure_enthusiast or product.persona_descriptions.performance_athlete or product.persona_descriptions.value_conscious_buyer) %}
+                            <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
+                                {% if product.persona_descriptions.athleisure_enthusiast %}
+                                <div class="bg-purple-50 rounded-lg p-4 border-l-4 {% if product.persona_descriptions.athleisure_enthusiast == 'N/A' %}border-gray-300{% else %}border-purple-300{% endif %}">
+                                    <h4 class="font-medium {% if product.persona_descriptions.athleisure_enthusiast == 'N/A' %}text-gray-700{% else %}text-purple-700{% endif %} mb-1 flex items-center">
+                                        <i class="fas fa-tshirt mr-2"></i> Athleisure Enthusiast
+                                    </h4>
+                                    {% if product.persona_descriptions.athleisure_enthusiast == 'N/A' %}
+                                        <p class="text-sm font-light text-gray-500 italic">Not applicable for this product category</p>
+                                    {% else %}
+                                        <p class="text-sm font-light text-purple-900">{{ product.persona_descriptions.athleisure_enthusiast }}</p>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                                
+                                {% if product.persona_descriptions.performance_athlete %}
+                                <div class="bg-blue-50 rounded-lg p-4 border-l-4 {% if product.persona_descriptions.performance_athlete == 'N/A' %}border-gray-300{% else %}border-blue-300{% endif %}">
+                                    <h4 class="font-medium {% if product.persona_descriptions.performance_athlete == 'N/A' %}text-gray-700{% else %}text-blue-700{% endif %} mb-1 flex items-center">
+                                        <i class="fas fa-running mr-2"></i> Performance Athlete
+                                    </h4>
+                                    {% if product.persona_descriptions.performance_athlete == 'N/A' %}
+                                        <p class="text-sm font-light text-gray-500 italic">Not applicable for this product category</p>
+                                    {% else %}
+                                        <p class="text-sm font-light text-blue-900">{{ product.persona_descriptions.performance_athlete }}</p>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                                
+                                {% if product.persona_descriptions.value_conscious_buyer %}
+                                <div class="bg-green-50 rounded-lg p-4 border-l-4 {% if product.persona_descriptions.value_conscious_buyer == 'N/A' %}border-gray-300{% else %}border-green-300{% endif %}">
+                                    <h4 class="font-medium {% if product.persona_descriptions.value_conscious_buyer == 'N/A' %}text-gray-700{% else %}text-green-700{% endif %} mb-1 flex items-center">
+                                        <i class="fas fa-tags mr-2"></i> Value-Conscious Buyer
+                                    </h4>
+                                    {% if product.persona_descriptions.value_conscious_buyer == 'N/A' %}
+                                        <p class="text-sm font-light text-gray-500 italic">Not applicable for this product category</p>
+                                    {% else %}
+                                        <p class="text-sm font-light text-green-900">{{ product.persona_descriptions.value_conscious_buyer }}</p>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="bg-gray-50 rounded-lg p-6 text-center">
+                                <i class="fas fa-users text-gray-300 text-5xl mb-3"></i>
+                                <p class="text-gray-500 mb-3">This product doesn't have persona-based descriptions yet.</p>
+                                <form action="{{ url_for('generate_product_personas', product_id=product.product_id) }}" method="post">
+                                    <button type="submit" class="mt-2 px-4 py-2 apple-button text-white rounded-full text-sm">
+                                        <i class="fas fa-magic mr-2"></i> Generate Persona Descriptions
+                                    </button>
+                                </form>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -995,6 +1066,21 @@
                     prevLightboxImage.style.display = 'block';
                     nextLightboxImage.style.display = 'block';
                 }
+            }
+            
+            // Persona Descriptions - Regenerate button
+            const regeneratePersonasBtn = document.getElementById('regeneratePersonasBtn');
+            if (regeneratePersonasBtn) {
+                regeneratePersonasBtn.addEventListener('click', function() {
+                    if (confirm('Are you sure you want to regenerate persona descriptions? This will replace the existing descriptions.')) {
+                        // Create a form and submit it to the route for regeneration
+                        const form = document.createElement('form');
+                        form.method = 'post';
+                        form.action = '{{ url_for("generate_product_personas", product_id=product.product_id) }}';
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
             }
         });
     </script>

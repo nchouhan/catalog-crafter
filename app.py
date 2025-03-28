@@ -23,7 +23,7 @@ os.makedirs('raw', exist_ok=True)
 os.makedirs('response', exist_ok=True)
 
 # Import OpenAI helper after app initialization
-from utils.openai_helper import analyze_product
+from utils.openai_helper import analyze_product, generate_persona_descriptions
 
 # File upload configuration
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
@@ -414,6 +414,16 @@ def update_product(product_id):
         if target_audience:
             product_data['target_audience'] = target_audience
         
+        # Update persona descriptions if provided
+        if 'persona_descriptions' in request.form:
+            # This would be a JSON string in the form
+            try:
+                persona_descriptions = json.loads(request.form.get('persona_descriptions', '{}'))
+                if persona_descriptions:
+                    product_data['persona_descriptions'] = persona_descriptions
+            except json.JSONDecodeError:
+                pass
+                
         # Save the updated product data back to the file
         with open(response_file, 'w') as f:
             json.dump(product_data, f, indent=4)
@@ -424,6 +434,41 @@ def update_product(product_id):
     except Exception as e:
         logging.error(f"Error updating product {product_id}: {str(e)}")
         flash(f'Error updating product: {str(e)}', 'error')
+        return redirect(url_for('view_product', product_id=product_id))
+
+@app.route('/generate_personas/<product_id>', methods=['POST'])
+def generate_product_personas(product_id):
+    """Generate persona-based descriptions for an existing product."""
+    try:
+        # Load product data from JSON file
+        response_file = f"response/{product_id}.json"
+        if not os.path.exists(response_file):
+            flash('Product not found', 'error')
+            return redirect(url_for('catalog'))
+        
+        with open(response_file, 'r') as f:
+            product_data = json.load(f)
+        
+        # Generate persona descriptions
+        result = generate_persona_descriptions(product_data)
+        
+        if 'error' in result:
+            flash(f'Error generating persona descriptions: {result["error"]}', 'error')
+            return redirect(url_for('view_product', product_id=product_id))
+        
+        # Update product data with new persona descriptions
+        product_data['persona_descriptions'] = result['persona_descriptions']
+        
+        # Save the updated product data back to the file
+        with open(response_file, 'w') as f:
+            json.dump(product_data, f, indent=4)
+        
+        flash('Persona descriptions generated successfully.', 'success')
+        return redirect(url_for('view_product', product_id=product_id))
+    
+    except Exception as e:
+        logging.error(f"Error generating personas for product {product_id}: {str(e)}")
+        flash(f'Error generating persona descriptions: {str(e)}', 'error')
         return redirect(url_for('view_product', product_id=product_id))
 
 @app.route('/search')
