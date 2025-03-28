@@ -12,3 +12,5 @@ coverage/
 response/*
 !response/.gitkeep
 .venv/
+temp/*
+!temp/.gitkeep
