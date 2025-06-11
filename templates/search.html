@@ -6,6 +6,8 @@
     <title>Search Products - Product Catalog Generator</title>
     <!-- TailwindCSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
@@ -49,6 +51,69 @@
             background-color: #0071e3;
             color: white;
         }
+        /* Spotlight Search Styles */
+        #spotlightOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.2s ease-in-out;
+            opacity: 0;
+        }
+        #spotlightContainer {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            width: 90%;
+            max-width: 650px;
+            max-height: 80vh;
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: all 0.2s ease-in-out;
+        }
+        #spotlightInput {
+            width: 100%;
+            padding: 18px 18px 18px 50px;
+            border: none;
+            border-bottom: 1px solid #f0f0f0;
+            background-color: transparent;
+            font-size: 18px;
+            color: #333;
+            outline: none;
+            font-weight: 400;
+        }
+        #spotlightResults {
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        #spotlightResults::-webkit-scrollbar {
+            width: 8px;
+        }
+        #spotlightResults::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #spotlightResults::-webkit-scrollbar-thumb {
+            background-color: rgba(0,0,0,0.1);
+            border-radius: 20px;
+        }
+        .spotlight-result-item {
+            display: flex;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+        .spotlight-result-item:hover {
+            background-color: rgba(0, 113, 227, 0.08);
+        }
         .search-container {
             max-width: 800px;
             margin: 0 auto;
@@ -73,6 +138,9 @@
                 <!-- Centralized navigation now handled by the buttons on the right -->
             </nav>
             <div class="flex space-x-4">
+                <button data-spotlight-trigger class="text-white bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-full flex items-center transition-all text-sm">
+                    <i class="fas fa-search mr-2"></i> Quick Search (⌘K)
+                </button>
                 <a href="{{ url_for('catalog') }}" class="text-white bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-full flex items-center transition-all text-sm">
                     <i class="fas fa-th-large mr-2"></i> All Products
                 </a>
@@ -84,6 +152,18 @@
     </header>
 
     <main class="container mx-auto px-4 py-8">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{% if category == 'error' %}danger{% elif category == 'warning' %}warning{% elif category == 'success' %}success{% else %}info{% endif %} alert-dismissible fade show mb-4" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
         <div class="search-container">
             <!-- Search Form -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
@@ -226,5 +306,37 @@
             </p>
         </div>
     </footer>
+
+    <!-- Spotlight Search Overlay -->
+    <div id="spotlightOverlay">
+        <div id="spotlightContainer">
+            <div class="relative p-3 border-b border-gray-200">
+                <div class="absolute inset-y-0 left-0 pl-8 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input type="text" id="spotlightInput" style="padding-left: 40px; text-indent: 0;" placeholder="Search products..." autocomplete="off">
+            </div>
+            <div id="spotlightResults"></div>
+            <div id="noSpotlightResults" class="py-8 px-4 text-center text-gray-500 hidden">
+                <p>No products found</p>
+            </div>
+            <div id="spotlightLoading" class="py-8 px-4 text-center text-gray-500 hidden">
+                <div class="flex justify-center items-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Searching...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Spotlight.js -->
+    <script src="{{ url_for('static', filename='js/spotlight.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/search-fix.js') }}"></script>
+    
+    <!-- Bootstrap JS Bundle (Bootstrap JS + Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

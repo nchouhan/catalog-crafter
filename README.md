@@ -46,7 +46,7 @@ A Flask-based web application that leverages OpenAI's GPT-4o API to automaticall
 2. Install dependencies:
 
 ```bash
-pip install -r requirements.txt
+pip/pip3 install -r requirements.txt
 ```
 
 3. Set up environment variables by copying and editing the example file:
@@ -67,7 +67,7 @@ SESSION_SECRET=your_random_secret_key_here
 Start the application in development mode:
 
 ```bash
-python main.py
+python/python3 main.py
 ```
 
 Or use Gunicorn for production:

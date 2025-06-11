@@ -6,6 +6,8 @@
     <title>{{ product_data.name }} - Catalog Results</title>
     <!-- TailwindCSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
@@ -65,6 +67,7 @@
             font-size: 18px;
             color: #333;
             outline: none;
+            text-indent: 0;
         }
         #spotlightResults {
             max-height: 60vh;
@@ -135,11 +138,11 @@
                 <!-- Centralized navigation now handled by the buttons on the right -->
             </nav>
             <div class="flex space-x-4">
+                <button data-spotlight-trigger class="text-white bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-full flex items-center transition-all text-sm">
+                    <i class="fas fa-search mr-2"></i> Quick Search (⌘K)
+                </button>
                 <a href="{{ url_for('catalog') }}" class="text-white bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-full flex items-center transition-all text-sm">
                     <i class="fas fa-th-large mr-2"></i> View Catalog
-                </a>
-                <a href="{{ url_for('search_page') }}" class="text-white bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-full flex items-center transition-all text-sm">
-                    <i class="fas fa-search mr-2"></i> Search Products
                 </a>
                 <a href="{{ url_for('index') }}" class="apple-button text-white px-4 py-2 flex items-center transition-all text-sm">
                     <i class="fas fa-plus mr-2"></i> New Product
@@ -149,6 +152,17 @@
     </header>
 
     <main class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{% if category == 'error' %}danger{% elif category == 'warning' %}warning{% elif category == 'success' %}success{% else %}info{% endif %} alert-dismissible fade show mb-4" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
         <!-- Product Overview -->
         <div class="section-card bg-white overflow-hidden mb-10">
             <div class="md:flex">
@@ -304,14 +318,14 @@
     <footer class="mt-12 pt-10 pb-8 border-t border-gray-200 text-center">
         <div class="container mx-auto px-4">
             <div class="flex justify-center space-x-8 mb-8">
+                <button data-spotlight-trigger class="text-gray-500 hover:text-gray-700 text-sm flex items-center border-0 bg-transparent cursor-pointer">
+                    <i class="fas fa-search mr-1.5"></i> Quick Search
+                </button>
                 <a href="{{ url_for('index') }}" class="text-gray-500 hover:text-gray-700 text-sm flex items-center">
                     <i class="fas fa-plus-circle mr-1.5"></i> New Product
                 </a>
                 <a href="{{ url_for('catalog') }}" class="text-gray-500 hover:text-gray-700 text-sm flex items-center">
                     <i class="fas fa-th-large mr-1.5"></i> Browse Catalog
-                </a>
-                <a href="{{ url_for('search_page') }}" class="text-gray-500 hover:text-gray-700 text-sm flex items-center">
-                    <i class="fas fa-search mr-1.5"></i> Search Products
                 </a>
             </div>
             <p class="text-gray-400 text-xs mb-2">&copy; 2025 Product Catalog Generator. All rights reserved.</p>
@@ -479,7 +493,7 @@
                 <div class="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
                     <i class="fas fa-search text-gray-400"></i>
                 </div>
-                <input type="text" id="spotlightInput" placeholder="Search products..." autocomplete="off">
+                <input type="text" id="spotlightInput" style="padding-left: 45px; text-indent: 0;" placeholder="Search products..." autocomplete="off">
             </div>
             <div id="spotlightResults"></div>
             <div id="noSpotlightResults" class="py-8 px-4 text-center text-gray-500 hidden">
@@ -495,5 +509,9 @@
     
     <!-- Spotlight Search Script -->
     <script src="{{ url_for('static', filename='js/spotlight.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/search-fix.js') }}"></script>
+    
+    <!-- Bootstrap JS Bundle (Bootstrap JS + Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
